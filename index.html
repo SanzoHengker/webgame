@@ -3,134 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golden Empire Slot - Cabinet Edition</title>
+    <title>Mesin Slot Autopilot 5-Reel</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="profile-overlay" class="profile-overlay" style="display: none;">
-        <div class="profile-card">
-            <h3>👤 MAKLUMAT PEMAIN</h3>
-            <div class="profile-field">
-                <span class="p-label">USERNAME:</span>
-                <span id="prof-username" class="p-value">Memuatkan...</span>
-            </div>
-            <div class="profile-field">
-                <span class="p-label">PLAYER ID:</span>
-                <span id="prof-uid" class="p-value-id">Memuatkan...</span>
-            </div>
-            <div class="profile-field">
-                <span class="p-label">EMEL DAFTAR:</span>
-                <span id="prof-email" class="p-value">Memuatkan...</span>
-            </div>
-            <div class="profile-actions">
-                <button class="btn-logout" onclick="handleLogout()">LOG KELUAR</button>
-                <button class="btn-close-prof" onclick="toggleProfileModal(false)">TUTUP</button>
-            </div>
+<div class="game-container">
+    <div class="top-bar">
+        <div class="user-profile-section">
+            <button class="control-btn" onclick="toggleProfileModal(true)">👤 PROFIL AMAN</button>
         </div>
-    </div>
-
-    <div id="big-win-overlay" class="big-win-overlay" style="display: none;">
-        <div class="overlay-content">
-            <div class="crown-icon">👑</div>
-            <h1 id="overlay-title" class="animate-pulse">ULTRA MEGA<br>BIG WIN</h1>
-            <div id="overlay-amount" class="overlay-amount">RM 0.00</div>
-            <button class="close-overlay-btn" onclick="closeOverlay()">COIN OUT</button>
-        </div>
-    </div>
-
-    <div class="cabinet-wrapper">
         
-        <div class="cabinet-top-header">
-            <div class="jackpot-header">
-                <div class="jp-box major">
-                    <span class="jp-tag">MAJOR</span>
-                    <span id="major-counter" class="jp-num">RM 128,450.00</span>
-                </div>
-                <div class="jp-box supreme">
-                    <span class="jp-tag">SUPREME</span>
-                    <span id="grand-counter" class="jp-num">RM 8,888,888.00</span>
-                </div>
-                <div class="jp-box minor">
-                    <span class="jp-tag">MINOR</span>
-                    <span id="minor-counter" class="jp-num">RM 3,210.00</span>
-                </div>
+        <button id="admin-gate-btn" onclick="window.location.href='admin.html'" style="display: none; background: linear-gradient(180deg, #ffd700 0%, #b39274 100%); color: #000; border: 2px solid #fff; padding: 8px 16px; font-weight: bold; font-size: 12px; border-radius: 4px; cursor: pointer; box-shadow: 0 0 12px rgba(255,215,0,0.5); margin-right: 10px; transition: transform 0.2s;">
+            👑 PANEL ADMIN
+        </button>
+
+        <button class="control-btn logout-btn" onclick="handleLogout()">🚪 KELUAR</button>
+    </div>
+
+    <div class="jackpot-container">
+        <div class="jackpot-title">GRAND JACKPOT</div>
+        <div id="grand-counter" class="jackpot-value">RM 50,000.00</div>
+    </div>
+
+    <div id="fs-banner" class="free-spin-banner" style="display: none;">
+        BONUS FREE SPIN AKTIF! BAKI: <span id="fs-count">0</span> | GANDAAN X2
+    </div>
+
+    <div class="slot-machine">
+        <canvas id="line-canvas"></canvas>
+        <div class="reel-container">
+            <div class="reel" id="reel-0">
+                <div class="cell" id="c-0-0">🐉</div>
+                <div class="cell" id="c-0-1">👑</div>
+                <div class="cell" id="c-0-2">💎</div>
             </div>
-            <button class="profile-trigger-btn" onclick="toggleProfileModal(true)">👤 PROFIL</button>
-        </div>
-
-        <div class="main-game-area">
-            <div class="slot-frame">
-                <div class="free-spin-banner" id="fs-banner" style="display: none;">
-                    FREE SPIN BONUS: <span id="fs-count">0</span> LEFT
-                </div>
-                
-                <div class="slot-grid" id="slot-grid">
-                    <div class="reel-cell" id="c-0-0">🐉</div><div class="reel-cell" id="c-1-0">💰</div><div class="reel-cell" id="c-2-0">🃏</div><div class="reel-cell text-free" id="c-3-0">FREE</div><div class="reel-cell" id="c-4-0">🐢</div>
-                    <div class="reel-cell" id="c-0-1">👑</div><div class="reel-cell" id="c-1-1">💎</div><div class="reel-cell" id="c-2-1">🍊</div><div class="reel-cell" id="c-3-1">🔥</div><div class="reel-cell" id="c-4-1">⚡</div>
-                    <div class="reel-cell" id="c-0-2">7️⃣</div><div class="reel-cell" id="c-1-2">🍒</div><div class="reel-cell" id="c-2-2">BAR</div><div class="reel-cell" id="c-3-2">🍇</div><div class="reel-cell" id="c-4-2">🍉</div>
-                </div>
-                <canvas id="line-canvas"></canvas>
+            <div class="reel" id="reel-1">
+                <div class="cell" id="c-1-0">💰</div>
+                <div class="cell" id="c-1-1">🍊</div>
+                <div class="cell" id="c-1-2">7️⃣</div>
             </div>
-        </div>
-
-        <div class="ticker-bar">
-            <span id="win-message">MEMBACA DATA AKAUN SEBENAR...</span>
-        </div>
-
-        <div class="bottom-dashboard">
-            <div class="dash-row status-row">
-                <div class="info-block box-balance">
-                    <span class="block-lbl">SALDO (RM)</span>
-                    <span id="display-balance" class="block-val">0.00</span>
-                </div>
-                <div class="info-block box-total-bet">
-                    <span class="block-lbl">TOTAL BET</span>
-                    <span id="display-total-bet" class="block-val text-gold">4.20</span>
-                </div>
-                <div class="info-block box-win">
-                    <span class="block-lbl">TOTAL WIN</span>
-                    <span id="display-win" class="block-val text-green-glow">0.00</span>
-                </div>
+            <div class="reel" id="reel-2">
+                <div class="cell" id="c-2-0">BAR</div>
+                <div class="cell" id="c-2-1">🍒</div>
+                <div class="cell" id="c-2-2">🐢</div>
             </div>
-
-            <div class="dash-row inputs-row">
-                <div class="control-stepper">
-                    <span class="input-lbl">LINES</span>
-                    <div class="stepper-actions">
-                        <button onclick="changeLines(-1)">−</button>
-                        <span id="display-lines" class="stepper-val">21</span>
-                        <button onclick="changeLines(1)">+</button>
-                    </div>
-                </div>
-
-                <div class="control-stepper">
-                    <span class="input-lbl">BET / LINE</span>
-                    <div class="stepper-actions">
-                        <button onclick="changeBet(-0.10)">−</button>
-                        <span id="display-bet" class="stepper-val">0.20</span>
-                        <button onclick="changeBet(0.10)">+</button>
-                    </div>
-                </div>
-
-                <div class="auto-select-box">
-                    <span class="input-lbl">AUTO COUNT</span>
-                    <select id="auto-spin-count">
-                        <option value="10">10x</option>
-                        <option value="25">25x</option>
-                        <option value="50">50x</option>
-                        <option value="999">∞ Unlim</option>
-                    </select>
-                </div>
+            <div class="reel" id="reel-3">
+                <div class="cell" id="c-3-0">👑</div>
+                <div class="cell" id="c-3-1">💎</div>
+                <div class="cell" id="c-3-2">🐉</div>
             </div>
-
-            <div class="dash-row actions-row">
-                <button id="auto-btn" class="btn-action btn-auto" onclick="toggleAutoSpin()">AUTO PLAY</button>
-                <button id="spin-btn" class="btn-action btn-spin" onclick="startSpin()">SPIN</button>
+            <div class="reel" id="reel-4">
+                <div class="cell" id="c-4-0">7️⃣</div>
+                <div class="cell" id="c-4-1">💰</div>
+                <div class="cell" id="c-4-2">🍊</div>
             </div>
         </div>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <div id="win-message" class="system-message">MEMUATKAN KREDIT...</div>
+
+    <div class="control-panel">
+        <div class="panel-info">
+            <span class="label">SALDO</span>
+            <div class="value-box">RM <span id="display-balance">0.00</span></div>
+        </div>
+
+        <div class="panel-info">
+            <span class="label">LINES</span>
+            <div class="control-group">
+                <button class="adjust-btn" onclick="changeLines(-1)">-</button>
+                <div class="value-box text-center"><span id="display-lines">21</span></div>
+                <button class="adjust-btn" onclick="changeLines(1)">+</button>
+            </div>
+        </div>
+
+        <div class="panel-info">
+            <span class="label">BET / LINE</span>
+            <div class="control-group">
+                <button class="adjust-btn" onclick="changeBet(-0.10)">-</button>
+                <div class="value-box text-center">RM <span id="display-bet">0.20</span></div>
+                <button class="adjust-btn" onclick="changeBet(0.10)">+</button>
+            </div>
+        </div>
+
+        <div class="panel-info">
+            <span class="label">TOTAL BET</span>
+            <div class="value-box highlight-yellow">RM <span id="display-total-bet">4.20</span></div>
+        </div>
+
+        <div class="panel-info">
+            <span class="label">WINNER PAID</span>
+            <div class="value-box highlight-green">RM <span id="display-win">0.00</span></div>
+        </div>
+
+        <div class="spin-actions">
+            <div class="auto-select-wrapper">
+                <select id="auto-spin-count">
+                    <option value="10">10 AUTO</option>
+                    <option value="25">25 AUTO</option>
+                    <option value="50">50 AUTO</option>
+                    <option value="999">INF AUTO</option>
+                </select>
+                <button id="auto-btn" onclick="toggleAutoSpin()">AUTO PLAY</button>
+            </div>
+            <button id="spin-btn" onclick="startSpin()">SPIN</button>
+        </div>
+    </div>
+</div>
+
+<div id="profile-overlay" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+        <h3>MAKLUMAT PEMAIN SECARA LIVE</h3>
+        <hr style="border-color:#333; margin:10px 0;">
+        <p>Username: <span id="prof-username" style="color:#ffd700;">-</span></p>
+        <p>Email: <span id="prof-email" style="color:#fff;">-</span></p>
+        <p>UID Akaun: <span id="prof-uid" style="color:#00ffcc; font-family:monospace; font-size:11px;">-</span></p>
+        <button class="modal-close-btn" onclick="toggleProfileModal(false)">TUTUP WINDOW</button>
+    </div>
+</div>
+
+<div id="big-win-overlay" class="big-win-modal" style="display: none;">
+    <div class="big-win-content">
+        <h1 class="flash-text">✨ BIG WIN ✨</h1>
+        <div id="overlay-amount" class="win-amount">RM 0.00</div>
+        <button class="collect-btn" onclick="closeOverlay()">AMBIL KREDIT</button>
+    </div>
+</div>
+
+<script type="module" src="script.js"></script>
 </body>
 </html>
