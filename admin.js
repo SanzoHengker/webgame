@@ -11,13 +11,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb.firebaseio.com/");
+const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb-default-rtdb.firebaseio.com/");
 
 let activeTargetUid = null;
 let activeActionType = null; 
 
-// Muat Turun Data Semua Pengguna dari Nod /wallets/
-function loadDashboardData() {
+// DIUBAH: Ditukar kepada fungsi global window supaya HTML/Browser boleh baca
+window.loadDashboardData = function() {
     const walletsRef = ref(db, 'wallets');
     get(walletsRef).then((snapshot) => {
         if (!snapshot.exists()) {
@@ -38,7 +38,7 @@ function loadDashboardData() {
             totalVaultAmount += parseFloat(user.balance) || 0;
 
             const isBanned = user.status === 'banned';
-            const statusHTML = isBanned ? `<span class="status-banned">BANNED</span>` : `<span class="status-active">ACTIVE</span>`;
+            const statusHTML = isBanned ? `<span class="status-banned" style="color:red; font-weight:bold;">BANNED</span>` : `<span class="status-active" style="color:green; font-weight:bold;">ACTIVE</span>`;
             const banBtnHTML = isBanned ? 
                 `<button class="btn btn-unban" onclick="changeUserStatus('${uid}', 'active')">UNBAN</button>` : 
                 `<button class="btn btn-ban" onclick="changeUserStatus('${uid}', 'banned')">BAN</button>`;
@@ -71,7 +71,7 @@ window.changeUserStatus = function(uid, newStatus) {
         const userRef = ref(db, 'wallets/' + uid);
         update(userRef, { status: newStatus }).then(() => {
             alert("Status pemain berjaya dikemaskini!");
-            loadDashboardData();
+            window.loadDashboardData();
         });
     }
 }
@@ -128,7 +128,7 @@ window.executeModalAction = function() {
             update(userRef, { balance: newBalance }).then(() => {
                 alert("Transaksi baki berjaya dikemaskini!");
                 closeModal();
-                loadDashboardData();
+                window.loadDashboardData();
             });
 
         } else if (activeActionType === 'email') {
@@ -136,12 +136,13 @@ window.executeModalAction = function() {
             const msg = document.getElementById('email-msg').value;
             if(!sub || !msg) { alert("Sila lengkapkan subjek dan mesej!"); return; }
             
-            // Logik simulasi atau integrasi API Emel (Contoh: EmailJS/SendGrid)
             alert(`Mesej Emel Berjaya Dihantar!\nKe: ${snapshot.val().email}\nSubjek: ${sub}`);
             closeModal();
         }
     });
 }
 
-// Jalankan fungsi semasa membuka halaman admin
-window.onload = loadDashboardData;
+// DIUBAH: Memastikan fungsi global dipanggil dengan selamat semasa onload
+window.onload = function() {
+    window.loadDashboardData();
+};
