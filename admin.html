@@ -3,190 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golden Empire - Panel Admin</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Panel Kawalan Utama Admin</title>
     <style>
-        body { overflow-y: auto; padding: 20px; font-family: Arial, sans-serif; }
-        .admin-box { background: #1a0000; border: 3px solid #ffd700; border-radius: 12px; padding: 20px; max-width: 600px; margin: 0 auto; box-shadow: 0 0 20px rgba(255,215,0,0.2); }
-        h2, h3 { color: #ffd700; margin-bottom: 15px; text-align: center; }
-        .section { background: #000; border: 1px solid #33211b; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        label { display: block; font-size: 11px; color: #a18e6e; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; background: #111; border: 1px solid #8b6508; border-radius: 4px; padding: 8px; color: #fff; margin-bottom: 10px; }
-        .btn-adm { background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%); border: none; color: #000; font-weight: bold; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; }
-        .btn-danger { background: linear-gradient(180deg, #ff4500 0%, #7f0000 100%); color: #fff; }
-        .status-msg { text-align: center; font-weight: bold; margin-top: 10px; font-size: 13px; }
-        .player-info { background: #222; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #00ffcc; margin-top: 10px; display: none; }
-        .btn-back { background: #444; color: #fff; margin-top: 15px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+        body { background: #0f0a0a; color: #fff; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        h2 { color: #ffd700; margin-bottom: 25px; text-align: center; border-bottom: 3px solid #ffd700; padding-bottom: 10px; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        
+        /* Grid Layout */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .card { background: #1a1212; padding: 15px; border-radius: 8px; border: 1px solid #ffd700; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .card h3 { font-size: 11px; color: #b39274; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .card p { font-size: 22px; font-weight: bold; }
+        
+        .rtp-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: bold; margin-top: 8px; font-size: 12px; }
+        .low { background: #5a0000; color: #ffb3b3; }
+        .medium { background: #5c4a00; color: #fff0b3; }
+        .high { background: #004d1a; color: #b3ffcc; }
+
+        /* Bahagian Urus Kredit Pemain */
+        .admin-section { background: #1a1212; border: 1px solid #332222; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
+        .section-title { color: #ffd700; margin-bottom: 15px; font-size: 16px; border-left: 4px solid #ffd700; padding-left: 10px; }
+        
+        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        input, select, button { padding: 10px; border-radius: 5px; border: 1px solid #443333; background: #000; color: #fff; font-size: 14px; }
+        input { flex: 1; min-width: 200px; }
+        select { min-width: 120px; }
+        
+        button.btn-search { background: #b39274; color: #000; font-weight: bold; border: none; cursor: pointer; }
+        button.btn-search:hover { background: #ffd700; }
+        
+        /* Hasil Carian Pemain */
+        .player-result-box { background: #261a1a; padding: 15px; border-radius: 6px; margin-top: 15px; border: 1px dashed #553333; display: none; }
+        .player-info { margin-bottom: 15px; font-size: 14px; line-height: 1.6; }
+        .player-info span { color: #ffd700; font-weight: bold; }
+        
+        .action-group { display: flex; gap: 10px; align-items: center; }
+        .btn-add { background: #228b22; color: #fff; font-weight: bold; border: none; cursor: pointer; padding: 10px 20px; }
+        .btn-deduct { background: #b22222; color: #fff; font-weight: bold; border: none; cursor: pointer; padding: 10px 20px; }
+        .btn-add:hover { background: #2ed12e; }
+        .btn-deduct:hover { background: #ff3333; }
+
+        /* Notifikasi Mesej */
+        .alert-msg { padding: 10px; border-radius: 4px; font-size: 13px; margin-top: 10px; display: none; text-align: center; font-weight: bold; }
+        .success { background: #1b4d22; color: #c3e6cb; }
+        .error { background: #661414; color: #f5c6cb; }
+
+        /* Jadual Rekod */
+        .table-container { background: #1a1212; padding: 20px; border-radius: 8px; border: 1px solid #332222; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+        th, td { padding: 12px; border-bottom: 1px solid #261a1a; font-size: 14px; }
+        th { color: #b39274; font-weight: normal; text-transform: uppercase; font-size: 11px; }
+        .text-green { color: #00ff00; font-weight: bold; }
+        .text-red { color: #ff3333; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="admin-box">
-        <h2>👑 UTILITY MANAGEMENT PANEL 👑</h2>
-        <div id="status" class="status-msg" style="color: #ffd700;">Mengesahkan identiti admin...</div>
-
-        <div id="admin-content" style="display: none;">
-            <div class="section">
-                <h3>💰 BUDGET HARIAN SYSTEM</h3>
-                <label>SET BUDGET UNTUK AGIHAN KEMENANGAN (RM)</label>
-                <input type="number" id="global-budget" placeholder="Contoh: 5000">
-                <button class="btn-adm" onclick="updateBudget()">KEMASKINI BUDGET</button>
-            </div>
-
-            <div class="section">
-                <h3>👤 PLAYER UTILITIES</h3>
-                <label>MASUKKAN USERNAME / PLAYER ID</label>
-                <input type="text" id="target-player" placeholder="Contoh: player99 atau UID">
-                <button class="btn-adm" onclick="searchPlayer()">CARI PLAYER</button>
-
-                <div id="player-data" class="player-info"></div>
-
-                <div id="player-actions" style="display: none; margin-top: 15px;">
-                    <label>AMBILI TINDAKAN BALANSA (RM)</label>
-                    <input type="number" id="amount-change" placeholder="Masukkan jumlah nilai (e.g. 100)">
-                    <div style="display:flex; gap: 10px; margin-bottom: 10px;">
-                        <button class="btn-adm" onclick="adjustBalance('add')" style="background: #1e7d1e; color:#fff;">+ TAMBAH</button>
-                        <button class="btn-adm" onclick="adjustBalance('deduct')" style="background: #7f0000; color:#fff;">- TOLAK</button>
-                    </div>
-
-                    <label>STATUS AKAUN</label>
-                    <button id="ban-btn" class="btn-adm btn-danger" onclick="toggleBanStatus()">BAN PLAYER</button>
-                </div>
-            </div>
-            
-            <button class="btn-adm btn-back" onclick="window.location.href='index.html'">KEMBALI KE GAME</button>
+<div class="container">
+    <h2>👑 MANAGEMENT PANEL & MONITORING AUTOPILOT 👑</h2>
+    
+    <div class="grid">
+        <div class="card">
+            <h3>Tarikh Hari Ini</h3>
+            <p id="live-date">-</p>
+        </div>
+        <div class="card">
+            <h3>Total Intake (Bet Masuk)</h3>
+            <p id="live-intake" class="text-green">RM 0.00</p>
+        </div>
+        <div class="card">
+            <h3>Total Payout (Win Keluar)</h3>
+            <p id="live-payout" class="text-red">RM 0.00</p>
+        </div>
+        <div class="card">
+            <h3>Margin Untung Bersih</h3>
+            <p id="live-profit">0.00%</p>
+            <div id="live-rtp-status" class="rtp-badge">Mengira...</div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, get, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <div class="admin-section">
+        <div class="section-title">Urus Kredit Pemain (Deposit In / Cuci Out)</div>
+        <div class="form-group">
+            <input type="text" id="search-input" placeholder="Masukkan Emel atau UID Pemain...">
+            <button class="btn-search" onclick="searchPlayer()">Cari Pemain</button>
+        </div>
+        
+        <div id="status-message" class="alert-msg"></div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBGIC0uvxEnAP2bpGnHi7BADI1y6cqorOI",
-            authDomain: "webgame-c1f7d.firebaseapp.com",
-            projectId: "webgame-c1f7d",
-            storageBucket: "webgame-c1f7d.firebasestorage.app",
-            messagingSenderId: "577183643543",
-            appId: "1:577183643543:web:6444105e46ecd349b876d2"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb.firebaseio.com/");
-
-        let currentAdminUID = null;
-        let activePlayerUID = null;
-        let activePlayerStatus = false; 
-
-        // 1. Sekatan Hak Akses Halaman
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = "auth.html";
-                return;
-            }
+        <div id="player-result" class="player-result-box">
+            <div class="player-info">
+                <p>Nama Pemain: <span id="res-username">-</span></p>
+                <p>Emel Akaun: <span id="res-email">-</span></p>
+                <p>UID Akaun: <span id="res-uid" style="font-family: monospace; font-size:12px;">-</span></p>
+                <p>Baki Kredit Semasa: <span id="res-balance" style="color:#00ffcc; font-size:18px;">RM 0.00</span></p>
+            </div>
             
-            const adminCheck = await get(ref(db, 'admins/' + user.uid));
-            if (!adminCheck.exists()) {
-                alert("Akses Ditolak! Anda bukan admin.");
-                window.location.href = "index.html";
-            } else {
-                currentAdminUID = user.uid;
-                document.getElementById('status').style.display = 'none';
-                document.getElementById('admin-content').style.display = 'block';
-                loadCurrentBudget();
-            }
-        });
+            <div class="section-title" style="font-size:14px; margin-bottom:10px;">Lakukan Transaksi Dompet</div>
+            <div class="action-group">
+                <input type="number" id="amount-input" step="0.01" min="1" placeholder="Amaun (RM) contoh: 50.00">
+                <button class="btn-add" onclick="updatePlayerBalance('ADD')">➕ IN (Deposit)</button>
+                <button class="btn-deduct" onclick="updatePlayerBalance('DEDUCT')">➖ OUT (Cuci / Withdraw)</button>
+            </div>
+        </div>
+    </div>
 
-        // 2. Baca & Set Budget Sistem
-        async function loadCurrentBudget() {
-            const budgetSnap = await get(ref(db, 'system_budget'));
-            if (budgetSnap.exists()) {
-                document.getElementById('global-budget').value = budgetSnap.val().dailyBudget || 0;
-            }
-        }
+    <div class="table-container">
+        <div class="section-title">Sejarah Perakaunan Harian (Log Masuk/Keluar Enjin)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tarikh</th>
+                    <th>Intake / Bet (RM)</th>
+                    <th>Payout / Win (RM)</th>
+                    <th>Untung Bersih (RM)</th>
+                    <th>Margin (%)</th>
+                </tr>
+            </thead>
+            <tbody id="history-table-body">
+                <tr>
+                    <td colspan="5" style="text-align:center; color:#666;">Memuatkan laporan dari Firebase...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-        window.updateBudget = async function() {
-            const budgetVal = parseFloat(document.getElementById('global-budget').value);
-            if (isNaN(budgetVal) || budgetVal < 0) return alert("Sila masukkan nilai budget sah.");
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // KELENGKAPAN CONFIG FIREBASE ANDA (Kekal Sama)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBGIC0uvxEnAP2bpGnHi7BADI1y6cqorOI",
+        authDomain: "webgame-c1f7d.firebaseapp.com",
+        projectId: "webgame-c1f7d",
+        storageBucket: "webgame-c1f7d.firebasestorage.app",
+        messagingSenderId: "577183643543",
+        appId: "1:577183643543:web:6444105e46ecd349b876d2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb.firebaseio.com/");
+
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+    document.getElementById('live-date').textContent = todayStr;
+
+    let targetPlayerUID = null; // Menyimpan ID pemain yang dicari aktif
+
+    // ========================================================
+    // LOGIK LIVE PEMANTAUAN UNTUNG RUGI (AUTOPILOT MONITOR)
+    // ========================================================
+    const dailyAccountingRef = ref(db, 'daily_accounting');
+    onValue(dailyAccountingRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const allData = snapshot.val();
             
-            await update(ref(db, 'system_budget'), { dailyBudget: budgetVal });
-            alert("Budget harian sistem berjaya diperbaharui!");
-        }
+            if (allData[todayStr]) {
+                const todayData = allData[todayStr];
+                const intake = parseFloat(todayData.total_intake || 0);
+                const payout = parseFloat(todayData.total_payout || 0);
+                const profit = intake - payout;
+                let margin = intake > 0 ? (profit / intake) * 100 : 0;
 
-        // 3. Utiliti Cari Pemain
-        window.searchPlayer = async function() {
-            const input = document.getElementById('target-player').value.trim();
-            if(!input) return alert("Sila isi input carian.");
+                document.getElementById('live-intake').textContent = `RM ${intake.toFixed(2)}`;
+                document.getElementById('live-payout').textContent = `RM ${payout.toFixed(2)}`;
+                document.getElementById('live-profit').textContent = `${margin.toFixed(2)}%`;
+                
+                const profitElement = document.getElementById('live-profit');
+                profitElement.className = margin < 5.0 ? 'text-red' : 'text-green';
 
-            let targetUID = input;
-            
-            if (!input.includes('@') && input.length < 20) {
-                const cleanKey = input.toLowerCase().replace(/[^a-z0-9]/g, "");
-                const userSnap = await get(ref(db, 'usernames/' + cleanKey));
-                if (userSnap.exists()) {
-                    targetUID = userSnap.val().uid;
+                const rtpStatus = document.getElementById('live-rtp-status');
+                if (intake <= 100) {
+                    rtpStatus.textContent = "MOD SEIMBANG (Fasa Pengenalan)";
+                    rtpStatus.className = "rtp-badge medium";
+                } else if (margin < 5.0) {
+                    rtpStatus.textContent = "MOD KETAT (RTP 85% - Memulihkan Margin)";
+                    rtpStatus.className = "rtp-badge low";
+                } else if (margin > 7.0) {
+                    rtpStatus.textContent = "MOD PEMURAH (RTP 98% - Menarik Trafik)";
+                    rtpStatus.className = "rtp-badge high";
+                } else {
+                    rtpStatus.textContent = "MOD NORMAL (RTP 95% - Stabil)";
+                    rtpStatus.className = "rtp-badge medium";
                 }
             }
 
-            const walletSnap = await get(ref(db, 'wallets/' + targetUID));
-            if (walletSnap.exists()) {
-                const data = walletSnap.val();
-                activePlayerUID = targetUID;
-                activePlayerStatus = data.isBanned || false;
+            // BINA JADUAL SEJARAH
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = "";
+            const sortedDates = Object.keys(allData).sort().reverse();
 
-                const displayBox = document.getElementById('player-data');
-                displayBox.style.display = 'block';
-                displayBox.innerHTML = `
-                    UID: ${targetUID}<br>
-                    USERNAME: ${data.username || 'N/A'}<br>
-                    EMAIL: ${data.email}<br>
-                    BAKI SEMASA: RM ${parseFloat(data.balance).toFixed(2)}<br>
-                    STATUS: ${activePlayerStatus ? '<span style="color:red">BANNED</span>' : '<span style="color:green">AKTIF</span>'}
+            sortedDates.forEach(date => {
+                const dayData = allData[date];
+                const intake = parseFloat(dayData.total_intake || 0);
+                const payout = parseFloat(dayData.total_payout || 0);
+                const netProfit = intake - payout;
+                const margin = intake > 0 ? (netProfit / intake) * 100 : 0;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${date}</strong> ${date === todayStr ? '<span style="color:#ffd700; font-size:10px;">(HARI INI)</span>' : ''}</td>
+                    <td class="text-green">${intake.toFixed(2)}</td>
+                    <td class="text-red">${payout.toFixed(2)}</td>
+                    <td class="${netProfit >= 0 ? 'text-green' : 'text-red'}">${netProfit.toFixed(2)}</td>
+                    <td class="${margin >= 5.0 ? 'text-green' : 'text-red'}"><strong>${margin.toFixed(2)}%</strong></td>
                 `;
+                tbody.appendChild(row);
+            });
+        }
+    });
 
-                document.getElementById('ban-btn').textContent = activePlayerStatus ? "UNBAN PLAYER" : "BAN PLAYER";
-                document.getElementById('player-actions').style.display = 'block';
+    // ========================================================
+    // LOGIK CARIAN & TRANSAKSI KREDIT (ADD / DEDUCT BALANCE)
+    // ========================================================
+    window.searchPlayer = async function() {
+        const queryStr = document.getElementById('search-input').value.trim();
+        const msgBox = document.getElementById('status-message');
+        const resultBox = document.getElementById('player-result');
+        
+        hideMessage();
+        resultBox.style.display = "none";
+        targetPlayerUID = null;
+
+        if (!queryStr) {
+            showMessage("Sila masukkan Emel atau UID Pemain untuk carian!", "error");
+            return;
+        }
+
+        try {
+            const walletsRef = ref(db, 'wallets');
+            const snapshot = await get(walletsRef);
+            
+            if (snapshot.exists()) {
+                const allWallets = snapshot.val();
+                let foundUID = null;
+                let foundData = null;
+
+                // Cari padanan sama ada melalui key UID atau nilai di dalam email
+                for (let uid in allWallets) {
+                    if (uid === queryStr || (allWallets[uid].email && allWallets[uid].email.toLowerCase() === queryStr.toLowerCase())) {
+                        foundUID = uid;
+                        foundData = allWallets[uid];
+                        break;
+                    }
+                }
+
+                if (foundUID && foundData) {
+                    targetPlayerUID = foundUID;
+                    document.getElementById('res-username').textContent = foundData.username || "Tiada Nama";
+                    document.getElementById('res-email').textContent = foundData.email || "Tiada Emel";
+                    document.getElementById('res-uid').textContent = foundUID;
+                    document.getElementById('res-balance').textContent = `RM ${parseFloat(foundData.balance || 0).toFixed(2)}`;
+                    
+                    resultBox.style.display = "block";
+                    showMessage("Akaun pemain dijumpai!", "success");
+                } else {
+                    showMessage("Akaun tidak dijumpai. Pastikan Emel/UID dimasukkan dengan tepat.", "error");
+                }
             } else {
-                alert("Pemain tidak dijumpai.");
-                document.getElementById('player-data').style.display = 'none';
-                document.getElementById('player-actions').style.display = 'none';
+                showMessage("Database wallets masih kosong.", "error");
             }
+        } catch (err) {
+            console.error(err);
+            showMessage("Ralat sistem ketika membaca maklumat wallets.", "error");
+        }
+    };
+
+    window.updatePlayerBalance = async function(actionType) {
+        if (!targetPlayerUID) {
+            showMessage("Tiada pemain yang dipilih secara aktif!", "error");
+            return;
         }
 
-        // 4. Tambah / Tolak Kredit Dompet
-        window.adjustBalance = async function(type) {
-            if(!activePlayerUID) return;
-            const amount = parseFloat(document.getElementById('amount-change').value);
-            if(isNaN(amount) || amount <= 0) return alert("Sila masukkan jumlah nilai yang betul.");
+        const amountInput = document.getElementById('amount-input');
+        const amountValue = parseFloat(amountInput.value);
 
-            const walletRef = ref(db, 'wallets/' + activePlayerUID);
-            const snap = await get(walletRef);
-            
-            if(snap.exists()) {
-                let currentBalance = parseFloat(snap.val().balance);
-                let newBalance = type === 'add' ? currentBalance + amount : currentBalance - amount;
+        if (isNaN(amountValue) || amountValue <= 0) {
+            showMessage("Sila masukkan nilai jumlah wang (RM) yang sah dan bernilai positif!", "error");
+            return;
+        }
+
+        try {
+            const playerWalletRef = ref(db, `wallets/${targetPlayerUID}`);
+            const snapshot = await get(playerWalletRef);
+
+            if (snapshot.exists()) {
+                const currentBalance = parseFloat(snapshot.val().balance || 0);
+                let newBalance = currentBalance;
+
+                if (actionType === 'ADD') {
+                    newBalance = currentBalance + amountValue;
+                } else if (actionType === 'DEDUCT') {
+                    if (currentBalance < amountValue) {
+                        showMessage(`Gagal DEDUCT! Baki pemain (RM ${currentBalance.toFixed(2)}) adalah kurang daripada jumlah yang ingin dicuci.`, "error");
+                        return;
+                    }
+                    newBalance = currentBalance - amountValue;
+                }
+
+                // Hantar kemas kini nilai baharu ke database Firebase
+                await update(playerWalletRef, {
+                    balance: parseFloat(newBalance.toFixed(2))
+                });
+
+                // Segarkan info paparan baki pada skrin sekarang
+                document.getElementById('res-balance').textContent = `RM ${newBalance.toFixed(2)}`;
+                amountInput.value = ""; // Kosongkan kotak amaun semula
                 
-                if (newBalance < 0) newBalance = 0;
+                const actionLabel = actionType === 'ADD' ? "IN (Deposit)" : "OUT (Cuci)";
+                showMessage(`Berjaya melakukan transaksi ${actionLabel} sebanyak RM ${amountValue.toFixed(2)}! Baki baru: RM ${newBalance.toFixed(2)}`, "success");
 
-                await update(walletRef, { balance: parseFloat(newBalance.toFixed(2)) });
-                alert(`Berjaya melakukan ${type} balansa!`);
-                searchPlayer(); // Refresh info
+            } else {
+                showMessage("Ralat! Data dompet pemain hilang secara tiba-tiba.", "error");
             }
+        } catch (err) {
+            console.error(err);
+            showMessage("Gagal mengemaskini baki dompet di Firebase.", "error");
         }
+    };
 
-        // 5. Fungsi Ban / Unban Pemain
-        window.toggleBanStatus = async function() {
-            if(!activePlayerUID) return;
-            const nextStatus = !activePlayerStatus;
-            
-            if(confirm(`Adakah anda pasti mahu ubah status sekatan pemain ini?`)) {
-                await update(ref(db, 'wallets/' + activePlayerUID), { isBanned: nextStatus });
-                alert("Status sekatan akaun berjaya diubah!");
-                searchPlayer();
-            }
-        }
-    </script>
+    function showMessage(text, type) {
+        const msgBox = document.getElementById('status-message');
+        msgBox.textContent = text;
+        msgBox.className = `alert-msg ${type}`;
+        msgBox.style.display = 'block';
+    }
+
+    function hideMessage() {
+        const msgBox = document.getElementById('status-message');
+        msgBox.style.display = 'none';
+    }
+</script>
 </body>
 </html>
