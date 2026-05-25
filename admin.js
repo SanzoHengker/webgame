@@ -16,17 +16,24 @@ const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb-default-rtdb.fir
 let activeTargetUid = null;
 let activeActionType = null; 
 
-// DIUBAH: Ditukar kepada fungsi global window supaya HTML/Browser boleh baca
+// 1. IKAT FUNGSI UTAMA PADA WINDOW (GLOBAL SCOPE)
 window.loadDashboardData = function() {
+    console.log("Memulakan penarikan data dari Firebase...");
     const walletsRef = ref(db, 'wallets');
+    
     get(walletsRef).then((snapshot) => {
+        const tbody = document.getElementById('player-table-body');
+        if (!tbody) {
+            console.error("Ralat: Elemen 'player-table-body' tidak dijumpai dalam HTML!");
+            return;
+        }
+
         if (!snapshot.exists()) {
-            document.getElementById('player-table-body').innerHTML = `<tr><td colspan="6" style="text-align:center;">Tiada data pemain ditemui.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Tiada data pemain ditemui dalam nod /wallets/.</td></tr>`;
             return;
         }
 
         const data = snapshot.val();
-        const tbody = document.getElementById('player-table-body');
         tbody.innerHTML = "";
 
         let totalPlayers = 0;
@@ -38,45 +45,57 @@ window.loadDashboardData = function() {
             totalVaultAmount += parseFloat(user.balance) || 0;
 
             const isBanned = user.status === 'banned';
-            const statusHTML = isBanned ? `<span class="status-banned" style="color:red; font-weight:bold;">BANNED</span>` : `<span class="status-active" style="color:green; font-weight:bold;">ACTIVE</span>`;
+            const statusHTML = isBanned ? `<span class="status-banned" style="color:#ff4444; font-weight:bold;">BANNED</span>` : `<span class="status-active" style="color:#00ff55; font-weight:bold;">ACTIVE</span>`;
+            
+            // Butang BAN/UNBAN dinamik
             const banBtnHTML = isBanned ? 
-                `<button class="btn btn-unban" onclick="changeUserStatus('${uid}', 'active')">UNBAN</button>` : 
-                `<button class="btn btn-ban" onclick="changeUserStatus('${uid}', 'banned')">BAN</button>`;
+                `<button class="btn btn-unban" onclick="window.changeUserStatus('${uid}', 'active')">UNBAN</button>` : 
+                `<button class="btn btn-ban" onclick="window.changeUserStatus('${uid}', 'banned')">BAN</button>`;
 
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td style="font-size:11px; color:#00ffcc;">${uid}</td>
+                <td style="font-size:11px; color:#00ffcc; font-family:monospace;">${uid}</td>
                 <td><strong>${user.username || 'N/A'}</strong></td>
                 <td>${user.email || '---'}</td>
                 <td style="color:#00ff55; font-weight:bold;">RM ${(user.balance || 0).toFixed(2)}</td>
                 <td>${statusHTML}</td>
                 <td>
-                    <button class="btn btn-add" onclick="openActionModal('${uid}', 'add', '${user.username}')">+ BAL</button>
-                    <button class="btn btn-deduct" onclick="openActionModal('${uid}', 'deduct', '${user.username}')">- BAL</button>
-                    <button class="btn btn-email" onclick="openActionModal('${uid}', 'email', '${user.username}')">📧 EMAIL</button>
+                    <button class="btn btn-add" onclick="window.openActionModal('${uid}', 'add', '${user.username || 'Player'}')">+ BAL</button>
+                    <button class="btn btn-deduct" onclick="window.openActionModal('${uid}', 'deduct', '${user.username || 'Player'}')">- BAL</button>
+                    <button class="btn btn-email" onclick="window.openActionModal('${uid}', 'email', '${user.username || 'Player'}')">📧 EMAIL</button>
                     ${banBtnHTML}
                 </td>
             `;
             tbody.appendChild(row);
         });
 
-        document.getElementById('total-players').textContent = totalPlayers;
-        document.getElementById('total-vault').textContent = totalVaultAmount.toFixed(2);
-    }).catch(err => console.error("Ralat database:", err));
-}
+        // Kemaskini kad statistik
+        const txtPlayers = document.getElementById('total-players');
+        const txtVault = document.getElementById('total-vault');
+        
+        if (txtPlayers) txtPlayers.textContent = totalPlayers;
+        if (txtVault) txtVault.textContent = totalVaultAmount.toFixed(2);
+        
+        console.log("Data berjaya dimuatkan! Jumlah pemain:", totalPlayers);
 
-// Kawalan Ban / Unban status pemain
+    }).catch(err => {
+        console.error("Ralat kritikal semasa membaca Database:", err);
+        alert("Ralat Database: " + err.message);
+    });
+};
+
+// 2. IKAT FUNGSI STATUS (BAN/UNBAN) PADA WINDOW
 window.changeUserStatus = function(uid, newStatus) {
     if(confirm(`Adakah anda pasti untuk menukar status pemain ini ke ${newStatus.toUpperCase()}?`)) {
         const userRef = ref(db, 'wallets/' + uid);
         update(userRef, { status: newStatus }).then(() => {
             alert("Status pemain berjaya dikemaskini!");
             window.loadDashboardData();
-        });
+        }).catch(err => console.error("Gagal menukar status:", err));
     }
-}
+};
 
-// Pengendali tetingkap Modal
+// 3. IKAT FUNGSI MODAL PADA WINDOW
 window.openActionModal = function(uid, action, username) {
     activeTargetUid = uid;
     activeActionType = action;
@@ -84,6 +103,11 @@ window.openActionModal = function(uid, action, username) {
     const title = document.getElementById('modal-title');
     const body = document.getElementById('modal-body-content');
     
+    if (!modal || !title || !body) {
+        console.error("Ralat: Struktur elemen modal dalam HTML tidak lengkap!");
+        return;
+    }
+
     modal.style.display = 'flex';
     body.innerHTML = "";
 
@@ -100,11 +124,12 @@ window.openActionModal = function(uid, action, username) {
             <label>Kandungan Mesej:</label><textarea id="email-msg" rows="4" placeholder="Tulis mesej pengumuman anda di sini..."></textarea>
         `;
     }
-}
+};
 
 window.closeModal = function() {
-    document.getElementById('admin-modal').style.display = 'none';
-}
+    const modal = document.getElementById('admin-modal');
+    if (modal) modal.style.display = 'none';
+};
 
 window.executeModalAction = function() {
     if (!activeTargetUid) return;
@@ -127,7 +152,7 @@ window.executeModalAction = function() {
 
             update(userRef, { balance: newBalance }).then(() => {
                 alert("Transaksi baki berjaya dikemaskini!");
-                closeModal();
+                window.closeModal();
                 window.loadDashboardData();
             });
 
@@ -137,12 +162,12 @@ window.executeModalAction = function() {
             if(!sub || !msg) { alert("Sila lengkapkan subjek dan mesej!"); return; }
             
             alert(`Mesej Emel Berjaya Dihantar!\nKe: ${snapshot.val().email}\nSubjek: ${sub}`);
-            closeModal();
+            window.closeModal();
         }
-    });
-}
+    }).catch(err => console.error("Gagal melaksanakan tindakan modal:", err));
+};
 
-// DIUBAH: Memastikan fungsi global dipanggil dengan selamat semasa onload
+// 4. JALANKAN SEBAIK SAHAJA WINDOW DI-REFRESH
 window.onload = function() {
     window.loadDashboardData();
 };
