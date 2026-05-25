@@ -31,21 +31,18 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         console.log("Sesi aktif disahkan:", user.email);
         
-        // PENGESAHAN STATUS BAN
+        // Isikan ID Unik terus ke struktur tetingkap modal profil
+        document.getElementById('prof-uid').textContent = user.uid;
+        document.getElementById('prof-email').textContent = user.email;
+
         const userWalletRef = ref(db, 'wallets/' + user.uid);
         try {
             const snapshot = await get(userWalletRef);
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                
-                // Jika kena BAN, tendang keluar secara paksa
-                if (data.isBanned === true) {
-                    alert("Akaun anda telah disekat (BANNED) oleh pihak pentadbir.");
-                    signOut(auth).then(() => { window.location.href = "auth.html"; });
-                    return;
-                }
-
                 balance = data.balance;
+                
+                // Masukkan nama username ke tetingkap modal sekiranya wujud
                 document.getElementById('prof-username').textContent = data.username ? data.username : "Tiada Tetapan";
                 console.log("Kredit ditarik dari DB: RM", balance);
             } else {
@@ -55,33 +52,10 @@ onAuthStateChanged(auth, async (user) => {
                 await set(userWalletRef, {
                     email: user.email,
                     username: "Pemain_Baru",
-                    balance: balance,
-                    isBanned: false
+                    balance: balance
                 });
             }
             
-            // SEMAK JIKA USER ADALAH ADMIN -> TAMPILKAN BUTANG ADMIN PANEL
-            const adminSnap = await get(ref(db, 'admins/' + user.uid));
-            if (adminSnap.exists()) {
-                // Bina butang admin secara dinamik di header panel
-                if (!document.getElementById('admin-go-btn')) {
-                    const header = document.querySelector('.cabinet-top-header');
-                    if (header) {
-                        const adminBtn = document.createElement('button');
-                        adminBtn.id = 'admin-go-btn';
-                        adminBtn.className = 'profile-trigger-btn';
-                        adminBtn.style.background = 'linear-gradient(180deg, #ff4500 0%, #7f0000 100%)';
-                        adminBtn.style.color = '#fff';
-                        adminBtn.style.marginLeft = '4px';
-                        adminBtn.textContent = '⚙️ ADMIN';
-                        adminBtn.onclick = () => { window.location.href = 'admin.html'; };
-                        header.appendChild(adminBtn);
-                    }
-                }
-            }
-
-            document.getElementById('prof-uid').textContent = user.uid;
-            document.getElementById('prof-email').textContent = user.email;
             updatePanelValues();
             
             const winMessage = document.getElementById('win-message');
@@ -187,12 +161,36 @@ const AudioEngine = {
 };
 
 // ========================================================
-// 3. MATEMATIK & DATA SLOT
+// 3. MATEMATIK & DATA SLOT (SISTEM AUTOPILOT RTP)
 // ========================================================
 const WILD_SYMBOL = '🃏';
 const SCATTER_SYMBOL = 'FREE';
 
-const normalSymbolsPool = ['🐉', '👑', '💎', 'TURTLE', '💰', '🍊', '7️⃣', 'BAR', '🍒', WILD_SYMBOL];
+// Konfigurasi Pemberat Simbol (Symbol Weightage) Berdasarkan Mod Kestabilan Keuntungan
+const RTP_WEIGHTS_CONFIG = {
+    "LOW": { // Mod Ketat (~85% RTP) - Digunakan apabila untung harian hos di bawah 5%
+        '🐉': 3, '👑': 5, '💎': 8, 'TURTLE': 12, '💰': 15, '🍊': 25, '7️⃣': 35, 'BAR': 45, '🍒': 60, [WILD_SYMBOL]: 2
+    },
+    "MEDIUM": { // Mod Seimbang (~95% RTP) - Standard operasi biasa
+        '🐉': 5, '👑': 8, '💎': 12, 'TURTLE': 18, '💰': 22, '🍊': 30, '7️⃣': 40, 'BAR': 50, '🍒': 65, [WILD_SYMBOL]: 4
+    },
+    "HIGH": { // Mod Pemurah (~98% RTP) - Aktif apabila untung bersih harian hos sudah melebihi 7%
+        '🐉': 8, '👑': 12, '💎': 18, 'TURTLE': 22, '💰': 26, '🍊': 32, '7️⃣': 42, 'BAR': 52, '🍒': 65, [WILD_SYMBOL]: 8
+    }
+};
+
+// Fungsi Dinamik Menjana Kolam Tiket berdasarkan Mod RTP Semasa
+function getWeightedPool(rtpMode) {
+    const config = RTP_WEIGHTS_CONFIG[rtpMode] || RTP_WEIGHTS_CONFIG["MEDIUM"];
+    let pool = [];
+    for (let symbol in config) {
+        let weight = config[symbol];
+        for (let i = 0; i < weight; i++) {
+            pool.push(symbol);
+        }
+    }
+    return pool;
+}
 
 const symbolsConfig = [
     { icon: WILD_SYMBOL, multiplier: [0, 0, 0] },
@@ -203,7 +201,7 @@ const symbolsConfig = [
     { icon: 'TURTLE', multiplier: [12, 60, 250] },  
     { icon: '💰', multiplier: [10, 45, 180] },
     { icon: '🍊', multiplier: [8, 30, 120] },
-    { icon: '7️⃣', multiplier: [5, 20, 90] },    
+    { icon: '7️⃣', multiplier: [5, 20, 90] },   
     { icon: 'BAR', multiplier: [3, 15, 60] },
     { icon: '🍒', multiplier: [2, 10, 40] }
 ];
@@ -292,6 +290,20 @@ window.startSpin = async function() {
         balance -= totalCost;
         winDisplay.textContent = "0.00"; 
         await syncBalanceToDatabase();
+
+        // AUTOPILOT: Tambah nilai taruhan ke intake harian (Turnover)
+        try {
+            const todayStr = new Date().toLocaleDateString('sv-SE');
+            const dailyRef = ref(db, `daily_accounting/${todayStr}`);
+            const dailySnap = await get(dailyRef);
+            const currentIntake = dailySnap.exists() ? parseFloat(dailySnap.val().total_intake || 0) : 0;
+            
+            await update(dailyRef, {
+                total_intake: parseFloat((currentIntake + totalCost).toFixed(2))
+            });
+        } catch(err) { 
+            console.error("Gagal mengemaskini intake harian:", err); 
+        }
     } else {
         freeSpinsRemaining--;
         fsCountDisplay.textContent = freeSpinsRemaining;
@@ -305,7 +317,63 @@ window.startSpin = async function() {
 
     AudioEngine.playSpin();
 
+    // ========================================================
+    // LOGIK AUTOPILOT 24/7: PENGIRAAN RTP BERDASARKAN UNTUNG 5%
+    // ========================================================
+    let currentRTPMode = "MEDIUM"; 
+    let calculatedRTPPercent = "95%";
+    const todayStr = new Date().toLocaleDateString('sv-SE'); 
+
+    try {
+        const dailyRef = ref(db, `daily_accounting/${todayStr}`);
+        const dailySnap = await get(dailyRef);
+        
+        if (dailySnap.exists()) {
+            const dailyData = dailySnap.val();
+            const intake = parseFloat(dailyData.total_intake || 0);
+            const payout = parseFloat(dailyData.total_payout || 0);
+            
+            // Fasa Permulaan: Jika pertaruhan hari ini masih kecil (< RM100), kekalkan mod medium
+            if (intake > 100) {
+                const currentProfitMargin = ((intake - payout) / intake) * 100;
+
+                if (currentProfitMargin < 5.0) {
+                    // Untung syarikat di bawah 5% -> Tukar mod ketat (LOW RTP)
+                    currentRTPMode = "LOW";
+                    calculatedRTPPercent = "85% (Ketat - Mengunci Margin 5%)";
+                } else if (currentProfitMargin > 7.0) {
+                    // Untung syarikat terlebih dari 7% -> Tukar mod longgar (HIGH RTP) untuk tarik trafik
+                    currentRTPMode = "HIGH";
+                    calculatedRTPPercent = "98% (Pemurah - Mod Promosi)";
+                } else {
+                    // Margin untung berada stabil dalam lingkungan target 5% - 7%
+                    currentRTPMode = "MEDIUM";
+                    calculatedRTPPercent = "95% (Normal - Seimbang)";
+                }
+            }
+        } else {
+            // Hari baru bermula: Mulakan struktur node tarikh hari ini dengan nilai 0
+            await set(dailyRef, { total_intake: 0, total_payout: 0 });
+        }
+    } catch(e) {
+        console.error("Ralat komunikasi enjin autopilot RTP harian:", e);
+    }
+
+    // Paparkan status live RTP pada monitor skrin Admin jika elemen HTML disediakan
+    const adminRtpDisplay = document.getElementById('admin-rtp-status');
+    if (adminRtpDisplay) {
+        adminRtpDisplay.textContent = calculatedRTPPercent;
+        adminRtpDisplay.className = `rtp-badge ${currentRTPMode.toLowerCase()}`;
+    }
+
+    // Dapatkan konfigurasi pool tiket rawak yang dinamik
+    const dynamicNormalPool = getWeightedPool(currentRTPMode);
+
+    // Kawalan kebarangkalian Scatter mengikut mod autopilot risiko semasa
     let baseChance = 0.28;
+    if (currentRTPMode === "LOW") baseChance = 0.15;  
+    if (currentRTPMode === "HIGH") baseChance = 0.35; 
+
     if (isFreeSpinMode) {
         baseChance = baseChance * (1 - 0.85); 
     }
@@ -335,8 +403,8 @@ window.startSpin = async function() {
                     cell.textContent = SCATTER_SYMBOL;
                     cell.classList.add('text-free');
                 } else {
-                    let pool = ['🐉', '👑', '💎', '💰', '🍊', '7️⃣', 'BAR', '🍒'];
-                    cell.textContent = pool[Math.floor(Math.random() * pool.length)];
+                    let animationPool = ['🐉', '👑', '💎', '💰', '🍊', '7️⃣', 'BAR', '🍒'];
+                    cell.textContent = animationPool[Math.floor(Math.random() * animationPool.length)];
                     cell.classList.remove('text-free');
                 }
             }
@@ -363,8 +431,8 @@ window.startSpin = async function() {
                     finalSymbol = SCATTER_SYMBOL;
                     cell.classList.add('text-free');
                 } else {
-                    let filteredPool = normalSymbolsPool;
-                    finalSymbol = filteredPool[Math.floor(Math.random() * filteredPool.length)];
+                    // Gunakan taburan kolam berat yang bersesuaian mengikut pengiraan margin semasa
+                    finalSymbol = dynamicNormalPool[Math.floor(Math.random() * dynamicNormalPool.length)];
                     cell.classList.remove('text-free');
                 }
 
@@ -458,6 +526,22 @@ async function calculateResults() {
 
     balance += currentSpinWin;
     await syncBalanceToDatabase();
+
+    // AUTOPILOT: Rekod jumlah kemenangan pemain ke payout harian (Outflow)
+    if (currentSpinWin > 0) {
+        try {
+            const todayStr = new Date().toLocaleDateString('sv-SE');
+            const dailyRef = ref(db, `daily_accounting/${todayStr}`);
+            const dailySnap = await get(dailyRef);
+            const currentPayout = dailySnap.exists() ? parseFloat(dailySnap.val().total_payout || 0) : 0;
+            
+            await update(dailyRef, {
+                total_payout: parseFloat((currentPayout + currentSpinWin).toFixed(2))
+            });
+        } catch (error) {
+            console.error("Gagal mengemaskini payout harian ke database:", error);
+        }
+    }
 
     if (currentSpinWin > 0) {
         drawWinningLines(winningLines);
