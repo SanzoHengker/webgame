@@ -30,6 +30,10 @@
                 <label>KATA LALUAN</label>
                 <input type="password" id="auth-password" required placeholder="Minima 6 aksara">
             </div>
+
+            <div class="forgot-password-container" id="forgot-password-box">
+                <button type="button" class="btn-forgot" onclick="handleForgotPassword()">Lupa Kata Laluan? Klik Sini</button>
+            </div>
             
             <button type="submit" id="submit-btn" class="btn-auth">LOG MASUK</button>
         </form>
@@ -41,7 +45,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -69,6 +73,7 @@
             const msgBox = document.getElementById('auth-message');
             const usernameGroup = document.getElementById('username-group');
             const identityLabel = document.getElementById('identity-label');
+            const forgotBox = document.getElementById('forgot-password-box');
             
             msgBox.style.display = 'none';
 
@@ -79,6 +84,7 @@
                 usernameGroup.style.display = 'none';
                 document.getElementById('auth-username').required = false;
                 toggleText.innerHTML = `Belum ada akaun? <a href="#" onclick="switchMode(event)">Daftar Sekarang</a>`;
+                forgotBox.style.display = "block"; // Papar butang reset semasa log masuk
             } else {
                 subtitle.textContent = "Cipta akaun slot baharu anda";
                 submitBtn.textContent = "DAFTAR AKAUN";
@@ -86,7 +92,62 @@
                 usernameGroup.style.display = 'block';
                 document.getElementById('auth-username').required = true;
                 toggleText.innerHTML = `Dah ada akaun? <a href="#" onclick="switchMode(event)">Log Masuk Sini</a>`;
+                forgotBox.style.display = "none"; // Sorok butang reset semasa daftar
             }
+        }
+
+        // FUNGSI UTAMA: PENGHANTARAN EMEL RESET PASSWORD SECARA AUTOMATIK
+        window.handleForgotPassword = async function() {
+            const identityInput = document.getElementById('auth-identity').value.trim();
+            const submitBtn = document.getElementById('submit-btn');
+            
+            if (!identityInput) {
+                showMsg("Sila masukkan Emel atau Username anda pada kotak input di atas terlebih dahulu.", "error");
+                return;
+            }
+
+            let emailTarget = identityInput;
+            submitBtn.disabled = true;
+
+            // Jika input bukan emel (tiada '@'), kita carikan emel sah berdasarkan Username/ID di database
+            if (!identityInput.includes('@')) {
+                showMsg("Menyemak rekod untuk mencari emel akaun...", "success");
+                const cleanUserKey = identityInput.toLowerCase().replace(/[^a-z0-9]/g, "");
+                
+                try {
+                    // 1. Semak rujukan usernames
+                    const userSnap = await get(ref(db, 'usernames/' + cleanUserKey));
+                    if (userSnap.exists() && userSnap.val().email) {
+                        emailTarget = userSnap.val().email;
+                    } else {
+                        // 2. Semak rujukan Player ID jika tak jumpa username
+                        const walletSnap = await get(ref(db, 'wallets/' + identityInput));
+                        if (walletSnap.exists() && walletSnap.val().email) {
+                            emailTarget = walletSnap.val().email;
+                        } else {
+                            submitBtn.disabled = false;
+                            showMsg("Username atau Player ID tidak dijumpai. Sila taip emel penuh.", "error");
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    submitBtn.disabled = false;
+                    showMsg("Ralat sistem ketika menyemak database.", "error");
+                    return;
+                }
+            }
+
+            // Memulakan proses penghantaran emel automatik daripada Firebase
+            showMsg("Memproses penghantaran emel reset...", "success");
+            sendPasswordResetEmail(auth, emailTarget)
+                .then(() => {
+                    submitBtn.disabled = false;
+                    showMsg(`Pautan reset berjaya dihantar ke emel: ${emailTarget}. Sila semak folder Inbox atau Spam!`, "success");
+                })
+                .catch((error) => {
+                    submitBtn.disabled = false;
+                    showMsg("Gagal menghantar e-mel: " + translateError(error.code), "error");
+                });
         }
 
         window.handleAuth = async function(e) {
@@ -102,21 +163,15 @@
             if (isLoginMode) {
                 let targetEmail = identity;
 
-                // Jika input bukan emel (tiada simbol @), buat carian di database
                 if (!identity.includes('@')) {
                     showMsg("Menyemak ID/Username...", "success");
-                    
-                    // 1. Cuba cari berdasarkan node 'usernames/' terlebih dahulu
                     const cleanUserKey = identity.toLowerCase().replace(/[^a-z0-9]/g, "");
-                    const usernameRef = ref(db, 'usernames/' + cleanUserKey);
-                    const userSnap = await get(usernameRef);
+                    const userSnap = await get(ref(db, 'usernames/' + cleanUserKey));
 
                     if (userSnap.exists()) {
                         targetEmail = userSnap.val().email;
                     } else {
-                        // 2. Jika tak jumpa username, cuba semak berdasarkan Player ID (UID) terus
-                        const walletRef = ref(db, 'wallets/' + identity);
-                        const walletSnap = await get(walletRef);
+                        const walletSnap = await get(ref(db, 'wallets/' + identity));
                         if (walletSnap.exists()) {
                             targetEmail = walletSnap.val().email;
                         } else {
@@ -127,7 +182,6 @@
                     }
                 }
 
-                // Log masuk menggunakan emel sebenar yang dijumpai
                 signInWithEmailAndPassword(auth, targetEmail, password)
                     .then(() => {
                         showMsg("Log masuk berjaya! Membuka game...", "success");
@@ -139,7 +193,6 @@
                     });
 
             } else {
-                // MOD PENDAFTARAN (SIGN UP)
                 const usernameRaw = document.getElementById('auth-username').value.trim();
                 const cleanUserKey = usernameRaw.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -150,10 +203,7 @@
                 }
 
                 showMsg("Menyemak ketersediaan nama...", "success");
-                
-                // Semak jika username telah digunakan orang lain
-                const usernameCheckRef = ref(db, 'usernames/' + cleanUserKey);
-                const checkSnap = await get(usernameCheckRef);
+                const checkSnap = await get(ref(db, 'usernames/' + cleanUserKey));
                 
                 if (checkSnap.exists()) {
                     submitBtn.disabled = false;
@@ -161,19 +211,16 @@
                     return;
                 }
 
-                // Mulakan pendaftaran akaun Firebase Auth
                 createUserWithEmailAndPassword(auth, identity, password)
                     .then(async (userCredential) => {
                         const user = userCredential.user;
                         
-                        // Daftarkan rujukan indeks username
                         await set(ref(db, 'usernames/' + cleanUserKey), {
                             username: usernameRaw,
                             uid: user.uid,
                             email: identity
                         });
 
-                        // Daftarkan tabung dompet (wallet) pertama kali beserta username
                         await set(ref(db, 'wallets/' + user.uid), {
                             email: identity,
                             username: usernameRaw,
@@ -203,6 +250,7 @@
                 case 'auth/email-already-in-use': return 'Alamat emel ini sudah berdaftar.';
                 case 'auth/weak-password': return 'Kata laluan mestilah sekurang-kurangnya 6 aksara.';
                 case 'auth/invalid-email': return 'Format emel tidak sah.';
+                case 'auth/user-not-found': return 'Akaun pengguna tidak dijumpai.';
                 default: return 'Ralat sistem. Sila cuba lagi.';
             }
         }
