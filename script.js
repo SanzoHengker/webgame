@@ -1,8 +1,9 @@
 // ========================================================
-// 1. FIREBASE AUTH GUARD (SEKATAN AKSES)
+// 1. FIREBASE AUTH & REALTIME DATABASE INTEGRATION
 // ========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBGIC0uvxEnAP2bpGnHi7BADI1y6cqorOI",
@@ -10,24 +11,68 @@ const firebaseConfig = {
     projectId: "webgame-c1f7d",
     storageBucket: "webgame-c1f7d.firebasestorage.app",
     messagingSenderId: "577183643543",
-    appId: "1:577183643543:web:6444105e46ecd349b876d2"
+    appId: "1:577183643543:web:6444105e46ecd349b876d2",
+    databaseURL: "https://webgame-c1f7d-default-rtdb.asia-southeast1.firebasedatabase.app" // Hubungan ke Realtime DB
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getDatabase(app);
 
-// Saring pemain. Jika tiada sesi aktif, hantar kembali ke auth.html
-onAuthStateChanged(auth, (user) => {
+let currentUser = null;
+
+// Saring pemain & Muat turun kredit sebenar dari Database
+onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = "auth.html";
     } else {
+        currentUser = user;
         console.log("Sesi disahkan untuk:", user.email);
-        const winMessage = document.getElementById('win-message');
-        if(winMessage && winMessage.textContent.includes("SEMAK INTEGRASI")) {
-            winMessage.textContent = "SILA PILIH BET DAN TEKAN SPIN UNTUK BERMAIN";
+        
+        // Ambil baki kredit pemain dari database berdasarkan UID mereka
+        const userWalletRef = ref(db, 'wallets/' + user.uid);
+        try {
+            const snapshot = await get(userWalletRef);
+            if (snapshot.exists()) {
+                // Jika akaun dah ada rekod kredit, muat turun nilai tersebut
+                balance = snapshot.val().balance;
+                console.log("Kredit dimuat turun dari DB: RM", balance);
+            } else {
+                // Jika pemain baru mendaftar, beri modal permulaan RM 1000.00 di database
+                balance = 1000.00;
+                await set(userWalletRef, {
+                    email: user.email,
+                    balance: balance
+                });
+                console.log("Pemain baru dikesan. Modal permulaan RM1000 didaftarkan ke DB.");
+            }
+            
+            // Kemas kini paparan setelah data berjaya diambil
+            updatePanelValues();
+            
+            const winMessage = document.getElementById('win-message');
+            if(winMessage && winMessage.textContent.includes("SEMAK INTEGRASI")) {
+                winMessage.textContent = "KREDIT SEBENAR DI-LOAD! SILA TEKAN SPIN UNTUK BERMAIN";
+            }
+        } catch (error) {
+            console.error("Gagal memuat turun data kredit:", error);
         }
     }
 });
+
+// Fungsi khas untuk kemas kini nilai baki (balance) terus ke cloud database
+async function syncBalanceToDatabase() {
+    if (!currentUser) return;
+    const userWalletRef = ref(db, 'wallets/' + currentUser.uid);
+    try {
+        await update(userWalletRef, {
+            balance: parseFloat(balance.toFixed(2))
+        });
+        console.log("Database berjaya dikemas kini secara realtime: RM", balance.toFixed(2));
+    } catch (error) {
+        console.error("Gagal mengemaskini baki ke cloud database:", error);
+    }
+}
 
 // ========================================================
 // 2. ENJIN AUDIO AUDIO CONTEXT SYNTHESIS
@@ -121,7 +166,7 @@ const paylinesPattern = [
 ];
 
 // STATE GAME
-let balance = 1000.00; 
+let balance = 0.00; // Bermula dengan 0 sebelum disegerakkan dari Database
 let currentBetPerLine = 0.20;
 let currentLines = 21;
 let isSpinning = false;
@@ -184,7 +229,7 @@ window.toggleAutoSpin = function() {
     }
 }
 
-window.startSpin = function() {
+window.startSpin = async function() {
     if (isSpinning) return;
 
     const totalCost = currentBetPerLine * currentLines;
@@ -196,6 +241,9 @@ window.startSpin = function() {
         }
         balance -= totalCost;
         winDisplay.textContent = "0.00"; 
+        
+        // SINKRONISASI 1: Tolak kos pertaruhan serta-merta di database semasa reel mula berputar
+        await syncBalanceToDatabase();
     } else {
         freeSpinsRemaining--;
         fsCountDisplay.textContent = freeSpinsRemaining;
@@ -209,15 +257,11 @@ window.startSpin = function() {
 
     AudioEngine.playSpin();
 
-    // 28% peluang asal per baris mendatar mendapat simbol FREE
     let baseChance = 0.28;
-    
-    // Potongan chance -85% jika berada dalam pusingan Free Spin (28% * 0.15 = 4.2%)
     if (isFreeSpinMode) {
         baseChance = baseChance * (1 - 0.85); 
     }
 
-    // Pemilihan kedudukan (Maksimum 1 simbol sebaris)
     for (let row = 0; row < 3; row++) {
         if (Math.random() < baseChance) { 
             presetScatterPositions[row] = Math.floor(Math.random() * 5); 
@@ -276,7 +320,6 @@ window.startSpin = function() {
                     cell.classList.remove('text-free');
                 }
 
-                // Tukar paparan visual text emoji 'TURTLE' semula jadi bentuk emoji asal kura-kura
                 cell.textContent = (finalSymbol === 'TURTLE') ? '🐢' : finalSymbol;
                 matrixResult[reelIndex][row] = finalSymbol;
             }
@@ -310,7 +353,7 @@ function stopAutoSpin() {
     autoSelect.disabled = false;
 }
 
-function calculateResults() {
+async function calculateResults() {
     let currentSpinWin = 0;
     let winningLines = [];
     let scatterCount = 0;
@@ -370,6 +413,9 @@ function calculateResults() {
 
     balance += currentSpinWin;
 
+    // SINKRONISASI 2: Kemas kini baki kredit terbaru ke database selepas kemenangan selesai dikira
+    await syncBalanceToDatabase();
+
     if (currentSpinWin > 0) {
         drawWinningLines(winningLines);
         const totalCost = currentBetPerLine * currentLines;
@@ -386,7 +432,6 @@ function calculateResults() {
         else winMessage.textContent = "FREE SPIN TIADA HIT, MATA TERKUMPUL KEKAL DI-HOLD.";
     }
 
-    // SYARAT MUTLAK: Tepat/Min 3 simbol FREE tertera = Ganjaran 7 pusingan percuma
     if (scatterCount >= 3) {
         freeSpinsRemaining += 7; 
         isFreeSpinMode = true;
