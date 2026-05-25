@@ -177,7 +177,7 @@ const symbolsConfig = [
     { icon: 'TURTLE', multiplier: [12, 60, 250] },  
     { icon: '💰', multiplier: [10, 45, 180] },
     { icon: '🍊', multiplier: [8, 30, 120] },
-    { icon: '7️⃣', multiplier: [5, 20, 90] },    
+    { icon: '7️⃣', multiplier: [5, 20, 90] },   
     { icon: 'BAR', multiplier: [3, 15, 60] },
     { icon: '🍒', multiplier: [2, 10, 40] }
 ];
@@ -440,14 +440,6 @@ async function calculateResults() {
             overlayAmount.textContent = `RM ${currentSpinWin.toFixed(2)}`;
             bigWinOverlay.style.display = 'flex';
             AudioEngine.playBigWinLoop(3.0);
-
-            // ========================================================
-            // MODIFIKASI DIMINTA: AUTO CLOSE SELEPAS 5 SAAT
-            // ========================================================
-            setTimeout(() => {
-                window.closeOverlay();
-            }, 5000);
-
         } else {
             AudioEngine.playNormalWin();
             winMessage.textContent = `MENANG TALIAN: RM ${currentSpinWin.toFixed(2)}!!`;
