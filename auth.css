@@ -64,6 +64,35 @@ body {
     outline: none;
 }
 
+/* ========================================================
+   TAMBAHAN GAYA GAYA BUTANG LUPA KATA LALUAN 
+   ======================================================== */
+.forgot-password-container {
+    text-align: right;
+    margin-top: -5px;
+    margin-bottom: 20px;
+}
+
+.btn-forgot {
+    background: none;
+    border: none;
+    color: #a18e6e;
+    font-size: 11px;
+    font-family: sans-serif;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+    padding: 2px 5px;
+}
+
+.btn-forgot:hover {
+    color: #ffd700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+/* ========================================================
+   GAYA UTAMA BUTANG AUTH & FOOTER
+   ======================================================== */
 .btn-auth {
     width: 100%;
     background: linear-gradient(180deg, #228b22 0%, #004d00 100%);
@@ -78,7 +107,11 @@ body {
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-.btn-auth:disabled { background: #444; border-color: #666; cursor: not-allowed; }
+.btn-auth:disabled { 
+    background: #444; 
+    border-color: #666; 
+    cursor: not-allowed; 
+}
 
 .auth-footer {
     margin-top: 20px;
@@ -91,7 +124,9 @@ body {
     text-decoration: none;
 }
 
-.auth-footer a:hover { text-decoration: underline; }
+.auth-footer a:hover { 
+    text-decoration: underline; 
+}
 
 .auth-msg {
     padding: 8px;
@@ -100,5 +135,15 @@ body {
     margin-bottom: 15px;
     font-weight: bold;
 }
-.auth-msg.error { background: #7a0000; color: #ffcccc; border: 1px solid #ff0000; }
-.auth-msg.success { background: #004d00; color: #ccffcc; border: 1px solid #00ff00; }
+
+.auth-msg.error { 
+    background: #7a0000; 
+    color: #ffcccc; 
+    border: 1px solid #ff0000; 
+}
+
+.auth-msg.success { 
+    background: #004d00; 
+    color: #ccffcc; 
+    border: 1px solid #00ff00; 
+}
