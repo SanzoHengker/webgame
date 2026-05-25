@@ -11,7 +11,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb-default-rtdb.firebaseio.com/");
+const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb.firebaseio.com/");
 
 let activeTargetUid = null;
 let activeActionType = null; 
