@@ -256,23 +256,6 @@ window.toggleAutoSpin = function() {
 window.startSpin = async function() {
     if (isSpinning) return;
 
-    // === BAHAGIAN A: SEMAK STATUS BAN (ADMIN FUNCTION) ===
-    try {
-        if (currentUser) {
-            const statusRef = ref(db, 'wallets/' + currentUser.uid);
-            const statusSnap = await get(statusRef);
-            if (statusSnap.exists() && statusSnap.val().status === 'banned') {
-                alert("Akaun anda telah disekat (BANNED) oleh pihak pentadbir!");
-                if(winMessage) winMessage.textContent = "⚠ AKAUN ANDA DI-BAN! AKSES DISEKAT.";
-                stopAutoSpin();
-                return;
-            }
-        }
-    } catch(e) { 
-        console.error("Gagal menyemak status sekatan akaun:", e); 
-    }
-    // ====================================================
-
     const totalCost = currentBetPerLine * currentLines;
     if (!isFreeSpinMode) {
         if (balance < totalCost) {
@@ -448,6 +431,7 @@ async function calculateResults() {
     }
 
     balance += currentSpinWin;
+    await syncBalanceToDatabase();
 
     if (currentSpinWin > 0) {
         drawWinningLines(winningLines);
@@ -460,21 +444,9 @@ async function calculateResults() {
             AudioEngine.playNormalWin();
             winMessage.textContent = `MENANG TALIAN: RM ${currentSpinWin.toFixed(2)}!!`;
         }
-        await syncBalanceToDatabase();
     } else {
-        // === BAHAGIAN B: LOGIK "SEDUT" KREDIT APABILA PLAYER KALAH ===
-        // Menyedut RM 0.50 secara senyap setiap kali kalah pada mod spin biasa
-        const amaunSedut = 0.50; 
-        
-        if (!isFreeSpinMode && balance >= amaunSedut) {
-            balance -= amaunSedut;
-            if (balanceDisplay) balanceDisplay.textContent = balance.toFixed(2);
-            if (winMessage) winMessage.textContent = `TIADA HIT. PENALTI DIKENAKAN: -RM ${amaunSedut.toFixed(2)}`;
-        } else {
-            if (!isFreeSpinMode) winMessage.textContent = "CUBA LAGI!";
-            else winMessage.textContent = "FREE SPIN TIADA HIT, MATA TERKUMPUL KEKAL DI-HOLD.";
-        }
-        await syncBalanceToDatabase();
+        if(!isFreeSpinMode) winMessage.textContent = "CUBA LAGI!";
+        else winMessage.textContent = "FREE SPIN TIADA HIT, MATA TERKUMPUL KEKAL DI-HOLD.";
     }
 
     if (scatterCount >= 3) {
