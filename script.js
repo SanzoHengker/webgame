@@ -35,6 +35,29 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('prof-uid').textContent = user.uid;
         document.getElementById('prof-email').textContent = user.email;
 
+        // --------------------------------------------------------
+        // SISTEM LIVE GATEKEEPER: SEMAKAN INTEGRITI ID ADMIN
+        // --------------------------------------------------------
+        try {
+            const adminCheckRef = ref(db, `admins/${user.uid}`);
+            const adminSnapshot = await get(adminCheckRef);
+            const adminButton = document.getElementById('admin-gate-btn');
+            
+            if (adminSnapshot.exists()) {
+                console.log("Akses Admin Diterima: Memaparkan butang Panel Admin.");
+                if (adminButton) {
+                    adminButton.style.display = "inline-block"; // Papar butang jika UID sepadan
+                }
+            } else {
+                if (adminButton) {
+                    adminButton.style.display = "none"; // Sembunyikan terus jika pemain biasa
+                }
+            }
+        } catch (adminErr) {
+            console.error("Gagal menapis status peranti admin:", adminErr);
+        }
+        // --------------------------------------------------------
+
         const userWalletRef = ref(db, 'wallets/' + user.uid);
         try {
             const snapshot = await get(userWalletRef);
