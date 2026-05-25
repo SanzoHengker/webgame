@@ -15,7 +15,7 @@
 
         <div id="auth-message" class="auth-msg" style="display: none;"></div>
 
-        <form id="auth-form" onsubmit=\"handleAuth(event)\">
+        <form id="auth-form" onsubmit="handleAuth(event)">
             <div class="input-group" id="username-group" style="display: none;">
                 <label>USERNAME UNIK</label>
                 <input type="text" id="auth-username" placeholder="contoh: player99">
@@ -30,20 +30,19 @@
                 <label>KATA LALUAN</label>
                 <input type="password" id="auth-password" required placeholder="Minima 6 aksara">
             </div>
-
-            <button type="submit" id="submit-btn" class="btn-auth">LOG MASUK KABINET</button>
+            
+            <button type="submit" id="submit-btn" class="btn-auth">LOG MASUK</button>
         </form>
 
         <div class="auth-footer">
-            <p id="toggle-text">Belum ada akaun pemain? <a href="#" onclick="toggleMode(event)">Daftar ID Baru</a></p>
+            <p id="toggle-text">Belum ada akaun? <a href="#" onclick="switchMode(event)">Daftar Sekarang</a></p>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // Di kemas kini bagi memuatkan fungsi query, orderByChild, dan equalTo
-        import { getDatabase, ref, get, set, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBGIC0uvxEnAP2bpGnHi7BADI1y6cqorOI",
@@ -58,88 +57,81 @@
         const auth = getAuth(app);
         const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb.firebaseio.com/");
 
-        let isRegister = false;
+        let isLoginMode = true;
 
-        window.toggleMode = function(e) {
+        window.switchMode = function(e) {
             e.preventDefault();
-            isRegister = !isRegister;
+            isLoginMode = !isLoginMode;
             
             const subtitle = document.getElementById('auth-subtitle');
-            const usernameGroup = document.getElementById('username-group');
-            const identityLabel = document.getElementById('identity-label');
-            const identityInput = document.getElementById('auth-identity');
             const submitBtn = document.getElementById('submit-btn');
             const toggleText = document.getElementById('toggle-text');
             const msgBox = document.getElementById('auth-message');
-
+            const usernameGroup = document.getElementById('username-group');
+            const identityLabel = document.getElementById('identity-label');
+            
             msgBox.style.display = 'none';
 
-            if (isRegister) {
-                subtitle.textContent = "Pendaftaran Akaun Slot Baharu";
-                usernameGroup.style.display = 'block';
-                document.getElementById('auth-username').required = true;
-                identityLabel.textContent = "ALAMAT EMEL PEMAIN";
-                identityInput.type = "email";
-                identityInput.placeholder = "contoh: player@gmail.com";
-                submitBtn.textContent = "DAFTAR & DAPAT KREDIT";
-                toggleText.innerHTML = `Dah ada ID berdaftar? <a href="#" onclick="toggleMode(event)">Log Masuk Sini</a>`;
-            } else {
+            if(isLoginMode) {
                 subtitle.textContent = "Sila log masuk untuk bermain";
+                submitBtn.textContent = "LOG MASUK";
+                identityLabel.textContent = "EMEL / USERNAME / PLAYER ID";
                 usernameGroup.style.display = 'none';
                 document.getElementById('auth-username').required = false;
-                identityLabel.textContent = "EMEL / USERNAME / PLAYER ID";
-                identityInput.type = "text";
-                identityInput.placeholder = "Masukkan pengenalan akaun anda";
-                submitBtn.textContent = "LOG MASUK KABINET";
-                toggleText.innerHTML = `Belum ada akaun pemain? <a href="#" onclick="toggleMode(event)">Daftar ID Baru</a>`;
+                toggleText.innerHTML = `Belum ada akaun? <a href="#" onclick="switchMode(event)">Daftar Sekarang</a>`;
+            } else {
+                subtitle.textContent = "Cipta akaun slot baharu anda";
+                submitBtn.textContent = "DAFTAR AKAUN";
+                identityLabel.textContent = "ALAMAT EMEL SEBENAR";
+                usernameGroup.style.display = 'block';
+                document.getElementById('auth-username').required = true;
+                toggleText.innerHTML = `Dah ada akaun? <a href="#" onclick="switchMode(event)">Log Masuk Sini</a>`;
             }
         }
 
         window.handleAuth = async function(e) {
             e.preventDefault();
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.disabled = true;
-
             const identity = document.getElementById('auth-identity').value.trim();
             const password = document.getElementById('auth-password').value;
-            const usernameRaw = document.getElementById('auth-username').value.trim();
+            const msgBox = document.getElementById('auth-message');
+            const submitBtn = document.getElementById('submit-btn');
 
-            if (!isRegister) {
-                showMsg("Menyemak rekod akaun...", "loading");
-                
+            msgBox.style.display = 'none';
+            submitBtn.disabled = true;
+
+            if (isLoginMode) {
                 let targetEmail = identity;
 
-                // JIKALAU INPUT BUKAN EMEL (PROSES LOG MASUK MENGGUNAKAN USERNAME)
+                // Jika input bukan emel (tiada simbol @), buat carian di database
                 if (!identity.includes('@')) {
-                    try {
-                        // Menggunakan Query Indeks secara spesifik mengikut parameter username (Lebih laju & mengelakkan sangkut)
-                        const walletsRef = ref(db, 'wallets');
-                        const usernameQuery = query(walletsRef, orderByChild('username'), equalTo(identity));
-                        const snapshot = await get(usernameQuery);
+                    showMsg("Menyemak ID/Username...", "success");
+                    
+                    // 1. Cuba cari berdasarkan node 'usernames/' terlebih dahulu
+                    const cleanUserKey = identity.toLowerCase().replace(/[^a-z0-9]/g, "");
+                    const usernameRef = ref(db, 'usernames/' + cleanUserKey);
+                    const userSnap = await get(usernameRef);
 
-                        if (snapshot.exists()) {
-                            const usersData = snapshot.val();
-                            // Ambil rekod emel pertama yang dipadankan dengan data username
-                            const firstUid = Object.keys(usersData)[0];
-                            targetEmail = usersData[firstUid].email;
+                    if (userSnap.exists()) {
+                        targetEmail = userSnap.val().email;
+                    } else {
+                        // 2. Jika tak jumpa username, cuba semak berdasarkan Player ID (UID) terus
+                        const walletRef = ref(db, 'wallets/' + identity);
+                        const walletSnap = await get(walletRef);
+                        if (walletSnap.exists()) {
+                            targetEmail = walletSnap.val().email;
                         } else {
                             submitBtn.disabled = false;
-                            showMsg("Ralat: Username atau ID tidak wujud dalam kabinet.", "error");
+                            showMsg("Gagal: Rekod Username atau Player ID tidak dijumpai.", "error");
                             return;
                         }
-                    } catch (error) {
-                        console.error("Ralat semakan log masuk:", error);
-                        submitBtn.disabled = false;
-                        showMsg("Ralat pangkalan data semasa menyemak akaun.", "error");
-                        return;
                     }
                 }
 
-                // Pelaksanaan Log Masuk terus ke sistem Firebase Auth
+                // Log masuk menggunakan emel sebenar yang dijumpai
                 signInWithEmailAndPassword(auth, targetEmail, password)
                     .then(() => {
-                        showMsg("Akses disahkan! Membuka kabinet...", "success");
-                        setTimeout(() => { window.location.href = "index.html"; }, 1200);
+                        showMsg("Log masuk berjaya! Membuka game...", "success");
+                        setTimeout(() => { window.location.href = "index.html"; }, 1500);
                     })
                     .catch((error) => {
                         submitBtn.disabled = false;
@@ -147,43 +139,45 @@
                     });
 
             } else {
-                showMsg("Menyemak ID/Username...", "loading");
+                // MOD PENDAFTARAN (SIGN UP)
+                const usernameRaw = document.getElementById('auth-username').value.trim();
+                const cleanUserKey = usernameRaw.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-                if (usernameRaw.length < 3) {
+                if (cleanUserKey.length < 3) {
                     submitBtn.disabled = false;
-                    showMsg("Username mestilah sekurang-kurangnya 3 aksara.", "error");
+                    showMsg("Gagal: Username mestilah sekurang-kurangnya 3 aksara.", "error");
                     return;
                 }
 
-                try {
-                    // Semakan pendaftaran: Pastikan username tidak bertindih dengan pemain sedia ada
-                    const walletsRef = ref(db, 'wallets');
-                    const usernameQuery = query(walletsRef, orderByChild('username'), equalTo(usernameRaw));
-                    const snapshot = await get(usernameQuery);
-
-                    if (snapshot.exists()) {
-                        submitBtn.disabled = false;
-                        showMsg("Username sudah digunakan. Sila pilih nama lain.", "error");
-                        return;
-                    }
-                } catch (error) {
-                    console.error("Ralat ketika semakan pendaftaran:", error);
+                showMsg("Menyemak ketersediaan nama...", "success");
+                
+                // Semak jika username telah digunakan orang lain
+                const usernameCheckRef = ref(db, 'usernames/' + cleanUserKey);
+                const checkSnap = await get(usernameCheckRef);
+                
+                if (checkSnap.exists()) {
                     submitBtn.disabled = false;
-                    showMsg("Ralat pangkalan data semasa pendaftaran.", "error");
+                    showMsg("Gagal: Username ini sudah diambil. Sila cuba nama lain.", "error");
                     return;
                 }
 
-                // Proses Pendaftaran Pengguna Baharu ke Firebase Auth & Database
+                // Mulakan pendaftaran akaun Firebase Auth
                 createUserWithEmailAndPassword(auth, identity, password)
                     .then(async (userCredential) => {
                         const user = userCredential.user;
-                        const userWalletRef = ref(db, 'wallets/' + user.uid);
                         
-                        await set(userWalletRef, {
+                        // Daftarkan rujukan indeks username
+                        await set(ref(db, 'usernames/' + cleanUserKey), {
+                            username: usernameRaw,
+                            uid: user.uid,
+                            email: identity
+                        });
+
+                        // Daftarkan tabung dompet (wallet) pertama kali beserta username
+                        await set(ref(db, 'wallets/' + user.uid), {
                             email: identity,
                             username: usernameRaw,
-                            balance: 1000.00,
-                            status: "active" // Default status ditambahkan bersandarkan kepada keperluan admin panel
+                            balance: 1000.00
                         });
 
                         showMsg("Pendaftaran berjaya! Membuka game...", "success");
