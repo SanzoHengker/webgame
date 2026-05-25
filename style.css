@@ -1,0 +1,234 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial Black', Gadget, sans-serif;
+}
+
+body {
+    background: #110101;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 10px;
+}
+
+.cabinet-wrapper {
+    background: radial-gradient(circle, #520404 0%, #1a0000 100%);
+    border: 5px solid #d4af37;
+    border-radius: 20px;
+    padding: 15px;
+    max-width: 980px;
+    width: 100%;
+    box-shadow: 0 0 35px rgba(212, 175, 55, 0.35), inset 0 0 20px #000;
+}
+
+.jackpot-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.jp-box {
+    background: #000;
+    border: 2px solid #333;
+    border-radius: 6px;
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+}
+
+.jp-box.supreme { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.25); }
+.jp-box.major { border-color: #00ccff; }
+.jp-box.minor { border-color: #00ffcc; }
+
+.jp-tag { font-size: 10px; font-weight: bold; }
+.major .jp-tag { color: #00ccff; }
+.supreme .jp-tag { color: #ffd700; }
+.minor .jp-tag { color: #00ffcc; }
+.jp-num { font-size: 13px; color: #fff; font-weight: bold; font-family: monospace; }
+
+.main-game-area {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.slot-frame {
+    position: relative;
+    background: #240202;
+    border: 4px solid #b8860b;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: inset 0 0 20px #000;
+}
+
+.free-spin-banner {
+    background: linear-gradient(90deg, #ff4500, #ffcc00);
+    color: #000;
+    font-weight: bold;
+    text-align: center;
+    padding: 6px;
+    font-size: 13px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    box-shadow: 0 0 10px #ffcc00;
+}
+
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 110px);
+    gap: 6px;
+}
+
+.reel-cell {
+    background: linear-gradient(180deg, #3d0707 0%, #140101 100%);
+    border: 1px solid #52392f;
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    user-select: none;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
+}
+
+.text-free {
+    font-size: 24px !important;
+    color: #ffea00 !important;
+    text-shadow: 0 0 8px #ff4500;
+    font-weight: 900;
+}
+
+#line-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+.spinning { animation: blurMotion 0.07s infinite linear; }
+
+@keyframes blurMotion {
+    0% { transform: translateY(-2px); filter: blur(3px); }
+    100% { transform: translateY(2px); filter: blur(3px); }
+}
+
+.ticker-bar {
+    background: #000;
+    border: 2px solid #b8860b;
+    border-radius: 4px;
+    padding: 8px;
+    text-align: center;
+    margin-bottom: 12px;
+    color: #ffd700;
+    font-size: 12px;
+    min-height: 34px;
+}
+
+.bottom-dashboard {
+    background: #1a0202;
+    border: 3px solid #8b6508;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dash-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-block {
+    background: #000;
+    border: 2px solid #b8860b;
+    border-radius: 6px;
+    flex: 1;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.block-lbl { font-size: 9px; color: #a18e6e; margin-bottom: 2px; }
+.block-val { font-size: 16px; font-weight: bold; font-family: monospace; }
+.text-gold { color: #ffd700; }
+.text-green-glow { color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.5); }
+
+.control-stepper, .auto-select-box {
+    background: #000;
+    border: 1px solid #555;
+    border-radius: 6px;
+    flex: 1;
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.input-lbl { font-size: 9px; color: #888; margin-bottom: 3px; }
+.stepper-actions { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+
+.stepper-actions button {
+    background: #3a0000;
+    border: 1px solid #b8860b;
+    color: #ffd700;
+    width: 25px;
+    height: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.stepper-actions button:hover { background: #550000; }
+.stepper-val { font-size: 13px; font-weight: bold; font-family: monospace; }
+
+.auto-select-box select {
+    background: #222;
+    color: #fff;
+    border: 1px solid #b8860b;
+    border-radius: 4px;
+    padding: 2px;
+    font-size: 12px;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-action {
+    border: 2px solid #fff;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+    padding: 10px 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.btn-auto { background: linear-gradient(180deg, #b22222 0%, #4a0000 100%); flex: 1; }
+.btn-auto.active { background: #ff4500; box-shadow: 0 0 10px #ff4500; }
+.btn-spin { background: linear-gradient(180deg, #228b22 0%, #004d00 100%); flex: 1.5; font-size: 18px; }
+.btn-spin:disabled { background: #333 !important; color: #666; border-color: #444; cursor: not-allowed; }
+
+.big-win-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9); z-index: 999;
+    display: flex; justify-content: center; align-items: center;
+    backdrop-filter: blur(5px);
+}
+.overlay-content {
+    background: radial-gradient(circle, #8b0000 0%, #2b0000 100%);
+    border: 4px solid #ffd700; padding: 25px; border-radius: 12px;
+    text-align: center; box-shadow: 0 0 35px #ffd700; width: 90%; max-width: 400px;
+}
+.crown-icon { font-size: 36px; margin-bottom: 8px; }
+.overlay-content h1 { font-size: 32px; color: #ffeb3b; text-shadow: 0 0 10px #ff5722; margin-bottom: 12px; }
+.overlay-amount { font-size: 28px; color: #00ffcc; font-weight: bold; margin-bottom: 15px; }
+.close-overlay-btn {
+    background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+    border: none; border-radius: 4px; color: #000; font-size: 14px;
+    font-weight: bold; padding: 8px 20px; cursor: pointer;
+}
