@@ -31,18 +31,21 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         console.log("Sesi aktif disahkan:", user.email);
         
-        // Isikan ID Unik terus ke struktur tetingkap modal profil
-        document.getElementById('prof-uid').textContent = user.uid;
-        document.getElementById('prof-email').textContent = user.email;
-
+        // PENGESAHAN STATUS BAN
         const userWalletRef = ref(db, 'wallets/' + user.uid);
         try {
             const snapshot = await get(userWalletRef);
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                balance = data.balance;
                 
-                // Masukkan nama username ke tetingkap modal sekiranya wujud
+                // Jika kena BAN, tendang keluar secara paksa
+                if (data.isBanned === true) {
+                    alert("Akaun anda telah disekat (BANNED) oleh pihak pentadbir.");
+                    signOut(auth).then(() => { window.location.href = "auth.html"; });
+                    return;
+                }
+
+                balance = data.balance;
                 document.getElementById('prof-username').textContent = data.username ? data.username : "Tiada Tetapan";
                 console.log("Kredit ditarik dari DB: RM", balance);
             } else {
@@ -52,10 +55,33 @@ onAuthStateChanged(auth, async (user) => {
                 await set(userWalletRef, {
                     email: user.email,
                     username: "Pemain_Baru",
-                    balance: balance
+                    balance: balance,
+                    isBanned: false
                 });
             }
             
+            // SEMAK JIKA USER ADALAH ADMIN -> TAMPILKAN BUTANG ADMIN PANEL
+            const adminSnap = await get(ref(db, 'admins/' + user.uid));
+            if (adminSnap.exists()) {
+                // Bina butang admin secara dinamik di header panel
+                if (!document.getElementById('admin-go-btn')) {
+                    const header = document.querySelector('.cabinet-top-header');
+                    if (header) {
+                        const adminBtn = document.createElement('button');
+                        adminBtn.id = 'admin-go-btn';
+                        adminBtn.className = 'profile-trigger-btn';
+                        adminBtn.style.background = 'linear-gradient(180deg, #ff4500 0%, #7f0000 100%)';
+                        adminBtn.style.color = '#fff';
+                        adminBtn.style.marginLeft = '4px';
+                        adminBtn.textContent = '⚙️ ADMIN';
+                        adminBtn.onclick = () => { window.location.href = 'admin.html'; };
+                        header.appendChild(adminBtn);
+                    }
+                }
+            }
+
+            document.getElementById('prof-uid').textContent = user.uid;
+            document.getElementById('prof-email').textContent = user.email;
             updatePanelValues();
             
             const winMessage = document.getElementById('win-message');
@@ -177,7 +203,7 @@ const symbolsConfig = [
     { icon: 'TURTLE', multiplier: [12, 60, 250] },  
     { icon: '💰', multiplier: [10, 45, 180] },
     { icon: '🍊', multiplier: [8, 30, 120] },
-    { icon: '7️⃣', multiplier: [5, 20, 90] },   
+    { icon: '7️⃣', multiplier: [5, 20, 90] },    
     { icon: 'BAR', multiplier: [3, 15, 60] },
     { icon: '🍒', multiplier: [2, 10, 40] }
 ];
