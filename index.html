@@ -8,6 +8,28 @@
 </head>
 <body>
 
+    <div id="profile-overlay" class="profile-overlay" style="display: none;">
+        <div class="profile-card">
+            <h3>👤 MAKLUMAT PEMAIN</h3>
+            <div class="profile-field">
+                <span class="p-label">USERNAME:</span>
+                <span id="prof-username" class="p-value">Memuatkan...</span>
+            </div>
+            <div class="profile-field">
+                <span class="p-label">PLAYER ID:</span>
+                <span id="prof-uid" class="p-value-id">Memuatkan...</span>
+            </div>
+            <div class="profile-field">
+                <span class="p-label">EMEL DAFTAR:</span>
+                <span id="prof-email" class="p-value">Memuatkan...</span>
+            </div>
+            <div class="profile-actions">
+                <button class="btn-logout" onclick="handleLogout()">LOG KELUAR</button>
+                <button class="btn-close-prof" onclick="toggleProfileModal(false)">TUTUP</button>
+            </div>
+        </div>
+    </div>
+
     <div id="big-win-overlay" class="big-win-overlay" style="display: none;">
         <div class="overlay-content">
             <div class="crown-icon">👑</div>
@@ -19,19 +41,22 @@
 
     <div class="cabinet-wrapper">
         
-        <div class="jackpot-header">
-            <div class="jp-box major">
-                <span class="jp-tag">MAJOR</span>
-                <span id="major-counter" class="jp-num">RM 128,450.00</span>
+        <div class="cabinet-top-header">
+            <div class="jackpot-header">
+                <div class="jp-box major">
+                    <span class="jp-tag">MAJOR</span>
+                    <span id="major-counter" class="jp-num">RM 128,450.00</span>
+                </div>
+                <div class="jp-box supreme">
+                    <span class="jp-tag">SUPREME</span>
+                    <span id="grand-counter" class="jp-num">RM 8,888,888.00</span>
+                </div>
+                <div class="jp-box minor">
+                    <span class="jp-tag">MINOR</span>
+                    <span id="minor-counter" class="jp-num">RM 3,210.00</span>
+                </div>
             </div>
-            <div class="jp-box supreme">
-                <span class="jp-tag">SUPREME</span>
-                <span id="grand-counter" class="jp-num">RM 8,888,888.00</span>
-            </div>
-            <div class="jp-box minor">
-                <span class="jp-tag">MINOR</span>
-                <span id="minor-counter" class="jp-num">RM 3,210.00</span>
-            </div>
+            <button class="profile-trigger-btn" onclick="toggleProfileModal(true)">👤 PROFIL</button>
         </div>
 
         <div class="main-game-area">
@@ -50,15 +75,14 @@
         </div>
 
         <div class="ticker-bar">
-            <span id="win-message">SEMAK INTEGRASI AKSES BERJAYA...</span>
+            <span id="win-message">MEMBACA DATA AKAUN SEBENAR...</span>
         </div>
 
         <div class="bottom-dashboard">
-            
             <div class="dash-row status-row">
                 <div class="info-block box-balance">
                     <span class="block-lbl">SALDO (RM)</span>
-                    <span id="display-balance" class="block-val">1000.00</span>
+                    <span id="display-balance" class="block-val">0.00</span>
                 </div>
                 <div class="info-block box-total-bet">
                     <span class="block-lbl">TOTAL BET</span>
@@ -104,7 +128,6 @@
                 <button id="auto-btn" class="btn-action btn-auto" onclick="toggleAutoSpin()">AUTO PLAY</button>
                 <button id="spin-btn" class="btn-action btn-spin" onclick="startSpin()">SPIN</button>
             </div>
-
         </div>
     </div>
 

@@ -1,46 +1,171 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Arial Black', Gadget, sans-serif;
+/* ========================================================
+   1. RESET GLOBAL & TEMA WARNA
+   ======================================================== */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Arial Black', Gadget, sans-serif; 
 }
 
-body {
-    background: #110101;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 10px;
+body { 
+    background: #110101; 
+    color: #fff; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+    padding: 10px; 
 }
 
-.cabinet-wrapper {
-    background: radial-gradient(circle, #520404 0%, #1a0000 100%);
-    border: 5px solid #d4af37;
-    border-radius: 20px;
-    padding: 15px;
-    max-width: 980px;
+/* ========================================================
+   2. STYLING UNTUK BORANG HALAMAN AUTH (auth.html)
+   ======================================================== */
+.auth-container {
+    background: radial-gradient(circle, #420202 0%, #140000 100%);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    padding: 30px;
     width: 100%;
-    box-shadow: 0 0 35px rgba(212, 175, 55, 0.35), inset 0 0 20px #000;
+    max-width: 420px;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
+    text-align: center;
 }
 
-.jackpot-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
+.auth-header h2 {
+    color: #ffd700;
+    font-size: 24px;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+.auth-header p {
+    color: #a18e6e;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    margin-bottom: 25px;
+}
+
+/* Kotak Notifikasi Ralat / Sukses */
+.auth-msg {
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+.auth-msg.error { background: #7f0000; color: #ffcdd2; border: 1px solid #d32f2f; }
+.auth-msg.success { background: #1b5e20; color: #c8e6c9; border: 1px solid #388e3c; }
+
+/* Ruangan Input Form */
+.input-group {
+    text-align: left;
     margin-bottom: 15px;
 }
 
-.jp-box {
+.input-group label {
+    display: block;
+    font-size: 10px;
+    color: #ffd700;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+.input-group input {
+    width: 100%;
     background: #000;
-    border: 2px solid #333;
+    border: 2px solid #52392f;
     border-radius: 6px;
-    flex: 1;
+    padding: 12px;
+    color: #fff;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    border-color: #ffd700;
+    outline: none;
+}
+
+/* Butang Submit & Pautan Footer */
+.btn-auth {
+    width: 100%;
+    background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+    border: 2px solid #fff;
+    border-radius: 6px;
+    color: #000;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+.btn-auth:hover { transform: scale(1.02); background: #fff; }
+
+.auth-footer {
+    margin-top: 20px;
+}
+.auth-footer p {
+    font-size: 12px;
+    color: #888;
+    font-family: Arial, sans-serif;
+}
+.auth-footer a {
+    color: #00ffcc;
+    text-decoration: none;
+    font-weight: bold;
+}
+.auth-footer a:hover { text-decoration: underline; }
+
+
+/* ========================================================
+   3. STRUKTUR UTAMA KABINET GAME (index.html)
+   ======================================================== */
+.cabinet-wrapper { 
+    background: radial-gradient(circle, #520404 0%, #1a0000 100%); 
+    border: 5px solid #d4af37; 
+    border-radius: 20px; 
+    padding: 15px; 
+    max-width: 980px; 
+    width: 100%; 
+    box-shadow: 0 0 35px rgba(212, 175, 55, 0.35), inset 0 0 20px #000; 
+}
+
+/* Susunan Kepala Kabinet */
+.cabinet-top-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 12px;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+
+/* ========================================================
+   4. SISTEM PAPARAN JACKPOT ATAS
+   ======================================================== */
+.cabinet-top-header .jackpot-header { 
+    display: flex; 
+    justify-content: space-between; 
+    gap: 8px; 
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.jp-box { 
+    background: #000; 
+    border: 2px solid #333; 
+    border-radius: 6px; 
+    flex: 1; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 6px 12px; 
 }
 
 .jp-box.supreme { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.25); }
@@ -53,104 +178,201 @@ body {
 .minor .jp-tag { color: #00ffcc; }
 .jp-num { font-size: 13px; color: #fff; font-weight: bold; font-family: monospace; }
 
-.main-game-area {
-    position: relative;
-    margin-bottom: 12px;
-}
 
-.slot-frame {
-    position: relative;
-    background: #240202;
-    border: 4px solid #b8860b;
-    border-radius: 10px;
-    padding: 10px;
-    box-shadow: inset 0 0 20px #000;
-}
-
-.free-spin-banner {
-    background: linear-gradient(90deg, #ff4500, #ffcc00);
-    color: #000;
-    font-weight: bold;
-    text-align: center;
-    padding: 6px;
-    font-size: 13px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    box-shadow: 0 0 10px #ffcc00;
-}
-
-.slot-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(3, 110px);
-    gap: 6px;
-}
-
-.reel-cell {
-    background: linear-gradient(180deg, #3d0707 0%, #140101 100%);
-    border: 1px solid #52392f;
+/* ========================================================
+   5. BUTANG PROFIL & OVERLAY MODAL KAD PROFIL
+   ======================================================== */
+.profile-trigger-btn {
+    background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+    border: 2px solid #fff;
     border-radius: 6px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 40px;
-    user-select: none;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
-}
-
-.text-free {
-    font-size: 24px !important;
-    color: #ffea00 !important;
-    text-shadow: 0 0 8px #ff4500;
-    font-weight: 900;
-}
-
-#line-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-.spinning { animation: blurMotion 0.07s infinite linear; }
-
-@keyframes blurMotion {
-    0% { transform: translateY(-2px); filter: blur(3px); }
-    100% { transform: translateY(2px); filter: blur(3px); }
-}
-
-.ticker-bar {
-    background: #000;
-    border: 2px solid #b8860b;
-    border-radius: 4px;
-    padding: 8px;
-    text-align: center;
-    margin-bottom: 12px;
-    color: #ffd700;
+    color: #000;
     font-size: 12px;
-    min-height: 34px;
+    font-weight: bold;
+    padding: 10px 15px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    white-space: nowrap;
+    transition: transform 0.1s ease;
+}
+.profile-trigger-btn:hover { background: #fff; color: #000; transform: scale(1.02); }
+
+/* Latar Belakang Modal Profil */
+.profile-overlay {
+    position: fixed;
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); 
+    z-index: 1000;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    backdrop-filter: blur(4px);
 }
 
-.bottom-dashboard {
-    background: #1a0202;
-    border: 3px solid #8b6508;
-    border-radius: 10px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+/* Kad Komponen Profil */
+.profile-card {
+    background: radial-gradient(circle, #3d0303 0%, #170000 100%);
+    border: 3px solid #ffd700;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 380px;
+    padding: 20px;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+    text-align: center;
 }
 
-.dash-row {
+.profile-card h3 {
+    color: #ffd700;
+    font-size: 18px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #52392f;
+    padding-bottom: 8px;
+}
+
+.profile-field {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    background: #000;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border: 1px solid #33211b;
 }
 
-.info-block {
-    background: #000;
-    border: 2px solid #b8860b;
-    border-radius: 6px;
-    flex: 1;
-    padding: 6px 10px;
+.p-label { font-size: 11px; color: #a18e6e; }
+.p-value { font-size: 13px; color: #fff; font-weight: bold; }
+.p-value-id { font-size: 11px; color: #00ffcc; font-family: monospace; font-weight: bold; word-break: break-all; text-align: right; padding-left: 10px; }
+
+.profile-actions {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.btn-logout {
+    background: linear-gradient(180deg, #d32f2f 0%, #7f0000 100%);
+    color: #fff; border: 1px solid #fff; border-radius: 4px;
+    padding: 10px; flex: 1; font-weight: bold; cursor: pointer; font-size: 12px;
+}
+
+.btn-close-prof {
+    background: #444; color: #fff; border: 1px solid #666; border-radius: 4px;
+    padding: 10px; flex: 1; font-weight: bold; cursor: pointer; font-size: 12px;
+}
+.btn-logout:hover { background: #ff5252; }
+.btn-close-prof:hover { background: #666; }
+
+
+/* ========================================================
+   6. GRID SLOT & REEL (BAHAGIAN TENGAH)
+   ======================================================== */
+.main-game-area { position: relative; margin-bottom: 12px; }
+
+.slot-frame { 
+    position: relative; 
+    background: #240202; 
+    border: 4px solid #b8860b; 
+    border-radius: 10px; 
+    padding: 10px; 
+    box-shadow: inset 0 0 20px #000; 
+}
+
+.free-spin-banner { 
+    background: linear-gradient(90deg, #ff4500, #ffcc00); 
+    color: #000; 
+    font-weight: bold; 
+    text-align: center; 
+    padding: 6px; 
+    font-size: 13px; 
+    border-radius: 4px; 
+    margin-bottom: 8px; 
+    box-shadow: 0 0 10px #ffcc00; 
+}
+
+.slot-grid { 
+    display: grid; 
+    grid-template-columns: repeat(5, 1fr); 
+    grid-template-rows: repeat(3, 110px); 
+    gap: 6px; 
+}
+
+.reel-cell { 
+    background: linear-gradient(180deg, #3d0707 0%, #140101 100%); 
+    border: 1px solid #52392f; 
+    border-radius: 6px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-size: 40px; 
+    user-select: none; 
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.8); 
+}
+
+.spinning { animation: blurMotion 0.07s infinite linear; }
+@keyframes blurMotion { 
+    0% { transform: translateY(-2px); filter: blur(3px); } 
+    100% { transform: translateY(2px); filter: blur(3px); } 
+}
+
+.text-free { 
+    font-size: 24px !important; 
+    color: #ffea00 !important; 
+    text-shadow: 0 0 8px #ff4500; 
+    font-weight: 900; 
+}
+
+#line-canvas { 
+    position: absolute; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    pointer-events: none; 
+    z-index: 10; 
+}
+
+
+/* ========================================================
+   7. TICKER BAR & PANEL DASHBOARD KAWALAN (BAWAH)
+   ======================================================== */
+.ticker-bar { 
+    background: #000; 
+    border: 2px solid #b8860b; 
+    border-radius: 4px; 
+    padding: 8px; 
+    text-align: center; 
+    margin-bottom: 12px; 
+    color: #ffd700; 
+    font-size: 12px; 
+    min-height: 34px; 
+}
+
+.bottom-dashboard { 
+    background: #1a0202; 
+    border: 3px solid #8b6508; 
+    border-radius: 10px; 
+    padding: 10px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.dash-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 10px; 
+}
+
+.info-block { 
+    background: #000; 
+    border: 2px solid #b8860b; 
+    border-radius: 6px; 
+    flex: 1; 
+    padding: 6px 10px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
 }
 
 .block-lbl { font-size: 9px; color: #a18e6e; margin-bottom: 2px; }
@@ -158,53 +380,53 @@ body {
 .text-gold { color: #ffd700; }
 .text-green-glow { color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.5); }
 
-.control-stepper, .auto-select-box {
-    background: #000;
-    border: 1px solid #555;
-    border-radius: 6px;
-    flex: 1;
-    padding: 4px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.control-stepper, .auto-select-box { 
+    background: #000; 
+    border: 1px solid #555; 
+    border-radius: 6px; 
+    flex: 1; 
+    padding: 4px 8px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
 }
 
 .input-lbl { font-size: 9px; color: #888; margin-bottom: 3px; }
 .stepper-actions { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 
-.stepper-actions button {
-    background: #3a0000;
-    border: 1px solid #b8860b;
-    color: #ffd700;
-    width: 25px;
-    height: 25px;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 4px;
+.stepper-actions button { 
+    background: #3a0000; 
+    border: 1px solid #b8860b; 
+    color: #ffd700; 
+    width: 25px; height: 25px; 
+    font-size: 16px; 
+    cursor: pointer; 
+    border-radius: 4px; 
 }
 .stepper-actions button:hover { background: #550000; }
 .stepper-val { font-size: 13px; font-weight: bold; font-family: monospace; }
 
-.auto-select-box select {
-    background: #222;
-    color: #fff;
-    border: 1px solid #b8860b;
-    border-radius: 4px;
-    padding: 2px;
-    font-size: 12px;
-    width: 100%;
-    text-align: center;
+.auto-select-box select { 
+    background: #222; 
+    color: #fff; 
+    border: 1px solid #b8860b; 
+    border-radius: 4px; 
+    padding: 2px; 
+    font-size: 12px; 
+    width: 100%; 
+    text-align: center; 
 }
 
-.btn-action {
-    border: 2px solid #fff;
-    border-radius: 6px;
-    font-size: 15px;
-    font-weight: bold;
-    color: #fff;
-    cursor: pointer;
-    padding: 10px 0;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+/* Butang Aksi Utama */
+.btn-action { 
+    border: 2px solid #fff; 
+    border-radius: 6px; 
+    font-size: 15px; 
+    font-weight: bold; 
+    color: #fff; 
+    cursor: pointer; 
+    padding: 10px 0; 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5); 
 }
 
 .btn-auto { background: linear-gradient(180deg, #b22222 0%, #4a0000 100%); flex: 1; }
@@ -212,23 +434,44 @@ body {
 .btn-spin { background: linear-gradient(180deg, #228b22 0%, #004d00 100%); flex: 1.5; font-size: 18px; }
 .btn-spin:disabled { background: #333 !important; color: #666; border-color: #444; cursor: not-allowed; }
 
-.big-win-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.9); z-index: 999;
-    display: flex; justify-content: center; align-items: center;
-    backdrop-filter: blur(5px);
+
+/* ========================================================
+   8. SKRIN DETIK BIG WIN OVERLAY
+   ======================================================== */
+.big-win-overlay { 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.9); 
+    z-index: 999; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    backdrop-filter: blur(5px); 
 }
-.overlay-content {
-    background: radial-gradient(circle, #8b0000 0%, #2b0000 100%);
-    border: 4px solid #ffd700; padding: 25px; border-radius: 12px;
-    text-align: center; box-shadow: 0 0 35px #ffd700; width: 90%; max-width: 400px;
+
+.overlay-content { 
+    background: radial-gradient(circle, #8b0000 0%, #2b0000 100%); 
+    border: 4px solid #ffd700; 
+    padding: 25px; 
+    border-radius: 12px; 
+    text-align: center; 
+    box-shadow: 0 0 35px #ffd700; 
+    width: 90%; 
+    max-width: 400px; 
 }
+
 .crown-icon { font-size: 36px; margin-bottom: 8px; }
 .overlay-content h1 { font-size: 32px; color: #ffeb3b; text-shadow: 0 0 10px #ff5722; margin-bottom: 12px; }
 .overlay-amount { font-size: 28px; color: #00ffcc; font-weight: bold; margin-bottom: 15px; }
-.close-overlay-btn {
-    background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
-    border: none; border-radius: 4px; color: #000; font-size: 14px;
-    font-weight: bold; padding: 8px 20px; cursor: pointer;
+
+.close-overlay-btn { 
+    background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%); 
+    border: none; 
+    border-radius: 4px; 
+    color: #000; 
+    font-size: 14px; 
+    font-weight: bold; 
+    padding: 8px 20px; 
+    cursor: pointer; 
 }

@@ -16,10 +16,16 @@
         <div id="auth-message" class="auth-msg" style="display: none;"></div>
 
         <form id="auth-form" onsubmit="handleAuth(event)">
-            <div class="input-group">
-                <label>EMEL</label>
-                <input type="email" id="auth-email" required placeholder="contoh@emel.com">
+            <div class="input-group" id="username-group" style="display: none;">
+                <label>USERNAME UNIK</label>
+                <input type="text" id="auth-username" placeholder="contoh: player99">
             </div>
+
+            <div class="input-group">
+                <label id="identity-label">EMEL / USERNAME / PLAYER ID</label>
+                <input type="text" id="auth-identity" required placeholder="Masukkan pengenalan akaun anda">
+            </div>
+            
             <div class="input-group">
                 <label>KATA LALUAN</label>
                 <input type="password" id="auth-password" required placeholder="Minima 6 aksara">
@@ -36,6 +42,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBGIC0uvxEnAP2bpGnHi7BADI1y6cqorOI",
@@ -48,10 +55,10 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getDatabase(app, "https://webgame-c1f7d-default-rtdb.firebaseio.com/");
 
         let isLoginMode = true;
 
-        // Tukar mod antara Login dan Register
         window.switchMode = function(e) {
             e.preventDefault();
             isLoginMode = !isLoginMode;
@@ -60,24 +67,31 @@
             const submitBtn = document.getElementById('submit-btn');
             const toggleText = document.getElementById('toggle-text');
             const msgBox = document.getElementById('auth-message');
+            const usernameGroup = document.getElementById('username-group');
+            const identityLabel = document.getElementById('identity-label');
             
             msgBox.style.display = 'none';
 
             if(isLoginMode) {
                 subtitle.textContent = "Sila log masuk untuk bermain";
                 submitBtn.textContent = "LOG MASUK";
+                identityLabel.textContent = "EMEL / USERNAME / PLAYER ID";
+                usernameGroup.style.display = 'none';
+                document.getElementById('auth-username').required = false;
                 toggleText.innerHTML = `Belum ada akaun? <a href="#" onclick="switchMode(event)">Daftar Sekarang</a>`;
             } else {
                 subtitle.textContent = "Cipta akaun slot baharu anda";
                 submitBtn.textContent = "DAFTAR AKAUN";
+                identityLabel.textContent = "ALAMAT EMEL SEBENAR";
+                usernameGroup.style.display = 'block';
+                document.getElementById('auth-username').required = true;
                 toggleText.innerHTML = `Dah ada akaun? <a href="#" onclick="switchMode(event)">Log Masuk Sini</a>`;
             }
         }
 
-        // Pengurusan hantar data borang
-        window.handleAuth = function(e) {
+        window.handleAuth = async function(e) {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value;
+            const identity = document.getElementById('auth-identity').value.trim();
             const password = document.getElementById('auth-password').value;
             const msgBox = document.getElementById('auth-message');
             const submitBtn = document.getElementById('submit-btn');
@@ -86,7 +100,35 @@
             submitBtn.disabled = true;
 
             if (isLoginMode) {
-                signInWithEmailAndPassword(auth, email, password)
+                let targetEmail = identity;
+
+                // Jika input bukan emel (tiada simbol @), buat carian di database
+                if (!identity.includes('@')) {
+                    showMsg("Menyemak ID/Username...", "success");
+                    
+                    // 1. Cuba cari berdasarkan node 'usernames/' terlebih dahulu
+                    const cleanUserKey = identity.toLowerCase().replace(/[^a-z0-9]/g, "");
+                    const usernameRef = ref(db, 'usernames/' + cleanUserKey);
+                    const userSnap = await get(usernameRef);
+
+                    if (userSnap.exists()) {
+                        targetEmail = userSnap.val().email;
+                    } else {
+                        // 2. Jika tak jumpa username, cuba semak berdasarkan Player ID (UID) terus
+                        const walletRef = ref(db, 'wallets/' + identity);
+                        const walletSnap = await get(walletRef);
+                        if (walletSnap.exists()) {
+                            targetEmail = walletSnap.val().email;
+                        } else {
+                            submitBtn.disabled = false;
+                            showMsg("Gagal: Rekod Username atau Player ID tidak dijumpai.", "error");
+                            return;
+                        }
+                    }
+                }
+
+                // Log masuk menggunakan emel sebenar yang dijumpai
+                signInWithEmailAndPassword(auth, targetEmail, password)
                     .then(() => {
                         showMsg("Log masuk berjaya! Membuka game...", "success");
                         setTimeout(() => { window.location.href = "index.html"; }, 1500);
@@ -95,9 +137,49 @@
                         submitBtn.disabled = false;
                         showMsg("Gagal: " + translateError(error.code), "error");
                     });
+
             } else {
-                createUserWithEmailAndPassword(auth, email, password)
-                    .then(() => {
+                // MOD PENDAFTARAN (SIGN UP)
+                const usernameRaw = document.getElementById('auth-username').value.trim();
+                const cleanUserKey = usernameRaw.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+                if (cleanUserKey.length < 3) {
+                    submitBtn.disabled = false;
+                    showMsg("Gagal: Username mestilah sekurang-kurangnya 3 aksara.", "error");
+                    return;
+                }
+
+                showMsg("Menyemak ketersediaan nama...", "success");
+                
+                // Semak jika username telah digunakan orang lain
+                const usernameCheckRef = ref(db, 'usernames/' + cleanUserKey);
+                const checkSnap = await get(usernameCheckRef);
+                
+                if (checkSnap.exists()) {
+                    submitBtn.disabled = false;
+                    showMsg("Gagal: Username ini sudah diambil. Sila cuba nama lain.", "error");
+                    return;
+                }
+
+                // Mulakan pendaftaran akaun Firebase Auth
+                createUserWithEmailAndPassword(auth, identity, password)
+                    .then(async (userCredential) => {
+                        const user = userCredential.user;
+                        
+                        // Daftarkan rujukan indeks username
+                        await set(ref(db, 'usernames/' + cleanUserKey), {
+                            username: usernameRaw,
+                            uid: user.uid,
+                            email: identity
+                        });
+
+                        // Daftarkan tabung dompet (wallet) pertama kali beserta username
+                        await set(ref(db, 'wallets/' + user.uid), {
+                            email: identity,
+                            username: usernameRaw,
+                            balance: 1000.00
+                        });
+
                         showMsg("Pendaftaran berjaya! Membuka game...", "success");
                         setTimeout(() => { window.location.href = "index.html"; }, 1500);
                     })
@@ -117,15 +199,14 @@
 
         function translateError(code) {
             switch(code) {
-                case 'auth/invalid-credential': return 'Emel atau kata laluan salah.';
-                case 'auth/email-already-in-use': return 'Emel ini sudah didaftarkan.';
+                case 'auth/invalid-credential': return 'Pengenalan atau kata laluan salah.';
+                case 'auth/email-already-in-use': return 'Alamat emel ini sudah berdaftar.';
                 case 'auth/weak-password': return 'Kata laluan mestilah sekurang-kurangnya 6 aksara.';
                 case 'auth/invalid-email': return 'Format emel tidak sah.';
-                default: return 'Ralat sistem berlaku. Cuba lagi.';
+                default: return 'Ralat sistem. Sila cuba lagi.';
             }
         }
 
-        // Jika sedia ada rekod login aktif, skip borang ini
         onAuthStateChanged(auth, (user) => {
             if (user) { window.location.href = "index.html"; }
         });

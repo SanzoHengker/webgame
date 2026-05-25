@@ -2,7 +2,7 @@
 // 1. FIREBASE AUTH & REALTIME DATABASE INTEGRATION
 // ========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -11,56 +11,64 @@ const firebaseConfig = {
     projectId: "webgame-c1f7d",
     storageBucket: "webgame-c1f7d.firebasestorage.app",
     messagingSenderId: "577183643543",
-    appId: "1:577183643543:web:6444105e46ecd349b876d2",
-    databaseURL: "https://webgame-c1f7d-default-rtdb.asia-southeast1.firebasedatabase.app" // Hubungan ke Realtime DB
+    appId: "1:577183643543:web:6444105e46ecd349b876d2"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getDatabase(app);
+
+// LINK DATABASE UTAMA ANDA YANG BARU
+const databaseURL = "https://webgame-c1f7d-default-rtdb.firebaseio.com/"; 
+const db = getDatabase(app, databaseURL);
 
 let currentUser = null;
 
-// Saring pemain & Muat turun kredit sebenar dari Database
+// Saring sesi & tarik baki dompet berserta maklumat profil komprehensif
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = "auth.html";
     } else {
         currentUser = user;
-        console.log("Sesi disahkan untuk:", user.email);
+        console.log("Sesi aktif disahkan:", user.email);
         
-        // Ambil baki kredit pemain dari database berdasarkan UID mereka
+        // Isikan ID Unik terus ke struktur tetingkap modal profil
+        document.getElementById('prof-uid').textContent = user.uid;
+        document.getElementById('prof-email').textContent = user.email;
+
         const userWalletRef = ref(db, 'wallets/' + user.uid);
         try {
             const snapshot = await get(userWalletRef);
             if (snapshot.exists()) {
-                // Jika akaun dah ada rekod kredit, muat turun nilai tersebut
-                balance = snapshot.val().balance;
-                console.log("Kredit dimuat turun dari DB: RM", balance);
+                const data = snapshot.val();
+                balance = data.balance;
+                
+                // Masukkan nama username ke tetingkap modal sekiranya wujud
+                document.getElementById('prof-username').textContent = data.username ? data.username : "Tiada Tetapan";
+                console.log("Kredit ditarik dari DB: RM", balance);
             } else {
-                // Jika pemain baru mendaftar, beri modal permulaan RM 1000.00 di database
+                // Kecemasan (Fallback sekiranya daftar dari kaedah alternatif tanpa melintasi auth form)
                 balance = 1000.00;
+                document.getElementById('prof-username').textContent = "Pemain_Baru";
                 await set(userWalletRef, {
                     email: user.email,
+                    username: "Pemain_Baru",
                     balance: balance
                 });
-                console.log("Pemain baru dikesan. Modal permulaan RM1000 didaftarkan ke DB.");
             }
             
-            // Kemas kini paparan setelah data berjaya diambil
             updatePanelValues();
             
             const winMessage = document.getElementById('win-message');
-            if(winMessage && winMessage.textContent.includes("SEMAK INTEGRASI")) {
-                winMessage.textContent = "KREDIT SEBENAR DI-LOAD! SILA TEKAN SPIN UNTUK BERMAIN";
+            if(winMessage) {
+                winMessage.textContent = "KREDIT DI-LOAD! SILA PILIH BET DAN TEKAN SPIN";
             }
         } catch (error) {
-            console.error("Gagal memuat turun data kredit:", error);
+            console.error("Ralat komunikasi pangkalan data:", error);
         }
     }
 });
 
-// Fungsi khas untuk kemas kini nilai baki (balance) terus ke cloud database
+// Kemas kini baki kredit awan
 async function syncBalanceToDatabase() {
     if (!currentUser) return;
     const userWalletRef = ref(db, 'wallets/' + currentUser.uid);
@@ -68,9 +76,27 @@ async function syncBalanceToDatabase() {
         await update(userWalletRef, {
             balance: parseFloat(balance.toFixed(2))
         });
-        console.log("Database berjaya dikemas kini secara realtime: RM", balance.toFixed(2));
     } catch (error) {
-        console.error("Gagal mengemaskini baki ke cloud database:", error);
+        console.error("Gagal mengemaskini baki awan:", error);
+    }
+}
+
+// Pengurusan Tetingkap Modal Profil
+window.toggleProfileModal = function(show) {
+    const profileOverlay = document.getElementById('profile-overlay');
+    if(profileOverlay) {
+        profileOverlay.style.display = show ? 'flex' : 'none';
+    }
+}
+
+// Menguruskan Log Keluar Pemain
+window.handleLogout = function() {
+    if (confirm("Adakah anda pasti mahu keluar dari kabinet slot?")) {
+        signOut(auth).then(() => {
+            window.location.href = "auth.html";
+        }).catch((error) => {
+            alert("Ralat sistem keluar: " + error.message);
+        });
     }
 }
 
@@ -80,7 +106,6 @@ async function syncBalanceToDatabase() {
 const AudioEngine = {
     ctx: null,
     init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-    
     playSpin() {
         this.init(); let now = this.ctx.currentTime;
         let osc = this.ctx.createOscillator(); let gain = this.ctx.createGain();
@@ -166,7 +191,7 @@ const paylinesPattern = [
 ];
 
 // STATE GAME
-let balance = 0.00; // Bermula dengan 0 sebelum disegerakkan dari Database
+let balance = 0.00; 
 let currentBetPerLine = 0.20;
 let currentLines = 21;
 let isSpinning = false;
@@ -198,7 +223,6 @@ const ctx = canvas.getContext('2d');
 const bigWinOverlay = document.getElementById('big-win-overlay');
 const overlayAmount = document.getElementById('overlay-amount');
 
-// WINDOW LEVEL BINDING
 window.changeLines = function(direction) {
     if (isSpinning || isAutoSpinActive || isFreeSpinMode) return;
     currentLines += direction;
@@ -241,8 +265,6 @@ window.startSpin = async function() {
         }
         balance -= totalCost;
         winDisplay.textContent = "0.00"; 
-        
-        // SINKRONISASI 1: Tolak kos pertaruhan serta-merta di database semasa reel mula berputar
         await syncBalanceToDatabase();
     } else {
         freeSpinsRemaining--;
@@ -334,9 +356,6 @@ window.closeOverlay = function() {
     continueGameFlow();
 }
 
-// ========================================================
-// 4. PEMPROSESAN DATA KEPUTUSAN & ATURAN RE-TRIGGER
-// ========================================================
 function updatePanelValues() {
     let totalBet = currentBetPerLine * currentLines;
     if(totalBetDisplay) totalBetDisplay.textContent = totalBet.toFixed(2);
@@ -412,8 +431,6 @@ async function calculateResults() {
     }
 
     balance += currentSpinWin;
-
-    // SINKRONISASI 2: Kemas kini baki kredit terbaru ke database selepas kemenangan selesai dikira
     await syncBalanceToDatabase();
 
     if (currentSpinWin > 0) {
@@ -435,12 +452,7 @@ async function calculateResults() {
     if (scatterCount >= 3) {
         freeSpinsRemaining += 7; 
         isFreeSpinMode = true;
-        
-        if (accumulatedFreeSpinWin === 0) {
-            accumulatedFreeSpinWin = currentSpinWin;
-        }
-
-        winMessage.textContent = `🎰 BONUS DICETUSKAN!! 3 SCATTER = 7 FREE SPINS DIBERIKAN!`;
+        if (accumulatedFreeSpinWin === 0) accumulatedFreeSpinWin = currentSpinWin;
         fsBanner.style.display = 'block';
         fsCountDisplay.textContent = freeSpinsRemaining;
         AudioEngine.playJackpotSiren();
@@ -481,9 +493,6 @@ function evaluateNextAutoPlay() {
     }
 }
 
-// ========================================================
-// 5. PENYEDIAAN GRAFIK TALIAN (CANVAS LUKISAN)
-// ========================================================
 function drawWinningLines(winningLines) {
     setupCanvasSize();
     const cellWidth = canvas.clientWidth / 5;
@@ -505,29 +514,6 @@ function drawWinningLines(winningLines) {
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
         ctx.stroke();
-
-        for (let i = 0; i < points.length; i++) {
-            if (points[i].isWild) {
-                let angle = 0;
-                if (i < points.length - 1) {
-                    angle = Math.atan2(points[i+1].y - points[i].y, points[i+1].x - points[i].x);
-                } else if (i > 0) {
-                    angle = Math.atan2(points[i].y - points[i-1].y, points[i].x - points[i-1].x);
-                }
-
-                ctx.save();
-                ctx.translate(points[i].x, points[i].y);
-                ctx.rotate(angle); 
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(-32, -10, 64, 20);
-                ctx.font = 'bold 14px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#ffd700';
-                ctx.fillText('WILD', 0, 0);
-                ctx.restore();
-            }
-        }
     });
 }
 
