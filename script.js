@@ -23,6 +23,40 @@ const db = getDatabase(app, databaseURL);
 
 let currentUser = null;
 
+// ========================================================
+// CONFIGURATION: MATRIKS JACKPOT AUTOMATIK (RTP & BUDGET)
+// ========================================================
+const DAILY_BUDGET = 5000.00; // Had payout maksima bonus dari syarikat sehari
+
+const JACKPOT_BASE = {
+    supreme: 50000.00,
+    major: 10000.00,
+    minor: 1000.00
+};
+
+const JACKPOT_RTP_RATE = {
+    supreme: 0.005, // 0.5% dari total bet masuk ke Supreme
+    major: 0.003,   // 0.3% dari total bet masuk ke Major
+    minor: 0.001    // 0.1% dari total bet masuk ke Minor
+};
+
+let currentJackpot = {
+    supreme: JACKPOT_BASE.supreme,
+    major: JACKPOT_BASE.major,
+    minor: JACKPOT_BASE.minor
+};
+
+// Fungsi memaparkan nilai Jackpot ke paparan skrin kabinet
+function updateJackpotDisplay() {
+    const gc = document.getElementById('grand-counter');
+    const mc = document.getElementById('major-counter');
+    const mnc = document.getElementById('minor-counter');
+
+    if (gc) gc.textContent = `RM ${currentJackpot.supreme.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (mc) mc.textContent = `RM ${currentJackpot.major.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (mnc) mnc.textContent = `RM ${currentJackpot.minor.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
+
 // Saring sesi & tarik baki dompet berserta maklumat profil komprehensif
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -57,6 +91,12 @@ onAuthStateChanged(auth, async (user) => {
             console.error("Gagal menapis status peranti admin:", adminErr);
         }
         // --------------------------------------------------------
+
+        // TARIK DATA JACKPOT LIVE DARI LOCALSTORAGE / FAIL OPERASI
+        currentJackpot.supreme = parseFloat(localStorage.getItem('jp_supreme')) || JACKPOT_BASE.supreme;
+        currentJackpot.major = parseFloat(localStorage.getItem('jp_major')) || JACKPOT_BASE.major;
+        currentJackpot.minor = parseFloat(localStorage.getItem('jp_minor')) || JACKPOT_BASE.minor;
+        updateJackpotDisplay();
 
         const userWalletRef = ref(db, 'wallets/' + user.uid);
         try {
@@ -327,6 +367,31 @@ window.startSpin = async function() {
         } catch(err) { 
             console.error("Gagal mengemaskini intake harian:", err); 
         }
+
+        // ========================================================
+        // LOGIK JACKPOT PROGRESSIVE AUTOMATIK (SUNTIKAN BARU)
+        // ========================================================
+        let sumbanganSupreme = totalCost * JACKPOT_RTP_RATE.supreme;
+        let sumbanganMajor   = totalCost * JACKPOT_RTP_RATE.major;
+        let sumbanganMinor   = totalCost * JACKPOT_RTP_RATE.minor;
+
+        // Semakan had siling Daily Budget supaya mengekalkan margin kedai
+        if ((currentJackpot.supreme + sumbanganSupreme) < (JACKPOT_BASE.supreme + DAILY_BUDGET)) {
+            currentJackpot.supreme += sumbanganSupreme;
+        }
+        if ((currentJackpot.major + sumbanganMajor) < (JACKPOT_BASE.major + (DAILY_BUDGET * 0.5))) {
+            currentJackpot.major += sumbanganMajor;
+        }
+        if ((currentJackpot.minor + sumbanganMinor) < (JACKPOT_BASE.minor + (DAILY_BUDGET * 0.2))) {
+            currentJackpot.minor += sumbanganMinor;
+        }
+
+        // Simpan rekod kenaikan real-time
+        localStorage.setItem('jp_supreme', currentJackpot.supreme);
+        localStorage.setItem('jp_major', currentJackpot.major);
+        localStorage.setItem('jp_minor', currentJackpot.minor);
+        updateJackpotDisplay();
+
     } else {
         freeSpinsRemaining--;
         fsCountDisplay.textContent = freeSpinsRemaining;
@@ -652,13 +717,5 @@ function drawWinningLines(winningLines) {
 
 function setupCanvasSize() { if(canvas) { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; } }
 function clearCanvas() { if(ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
-setInterval(() => {
-    let gc = document.getElementById('grand-counter');
-    if(gc) {
-        let cur = parseFloat(gc.textContent.replace(/[^0-9.-]+/g,""));
-        gc.textContent = "RM " + (cur + Math.random() * 0.15).toLocaleString('en-US', { minimumFractionDigits: 2 });
-    }
-}, 900);
 
 updatePanelValues();
